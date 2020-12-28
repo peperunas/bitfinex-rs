@@ -18,7 +18,7 @@ Add this to your Cargo.toml
 
 ```toml
 [dependencies]
-bitfinex = { git = "https://github.com/wisespace-io/bitfinex-rs.git" }
+bitfinex = { git = "https://github.com/peperunas/bitfinex-rs.git" }
 ```
 
 ## PUBLIC ENDPOINTS
