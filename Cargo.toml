@@ -1,8 +1,8 @@
 [package]
 name = "bitfinex"
-version = "0.4.2"
+version = "0.4.3"
 license = "MIT OR Apache-2.0"
-authors = ["Flavio Oliveira <flavio@wisespace.io>"]
+authors = ["Flavio Oliveira <flavio@wisespace.io>", "Giulio De Pasquale <depasquale@giugl.io>"]
 
 description = "Rust Library for the Bitfinex API"
 keywords = ["cryptocurrency", "trading", "bitcoin"]
