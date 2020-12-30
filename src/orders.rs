@@ -1,6 +1,7 @@
-use client::*;
-use errors::*;
+
 use serde_json::from_str;
+use crate::client::Client;
+use crate::errors::BoxError;
 
 #[derive(Serialize, Deserialize)]
 pub struct Order { 
@@ -57,13 +58,13 @@ impl Orders {
         }
     }
 
-    pub fn active_orders(&self) -> Result<Vec<Order>> {
+    pub fn active_orders(&self) -> Result<Vec<Order>, BoxError> {
         let payload: String = format!("{}", "{}");
 
         self.orders("orders".to_owned(), payload)
     }
 
-    pub fn history<T>(&self, symbol: T) -> Result<Vec<Order>>
+    pub fn history<T>(&self, symbol: T) -> Result<Vec<Order>, BoxError>
         where T: Into<Option<String>>
     {    
         let value = symbol.into().unwrap_or("".into());
@@ -77,7 +78,7 @@ impl Orders {
         }
     }
 
-    pub fn orders<S>(&self, request: S, payload: S) -> Result<Vec<Order>>
+    pub fn orders<S>(&self, request: S, payload: S) -> Result<Vec<Order>, BoxError>
         where S: Into<String>
     {    
         let data = self.client.post_signed(request.into(), payload.into())?;

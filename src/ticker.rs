@@ -1,6 +1,8 @@
-use client::*;
-use errors::*;
+
+
 use serde_json::from_str;
+use crate::client::Client;
+use crate::errors::BoxError;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TradingPair { 
@@ -45,7 +47,7 @@ impl Ticker {
         }
     }
 
-    pub fn funding_currency<S>(&self, symbol: S) -> Result<FundingCurrency>
+    pub fn funding_currency<S>(&self, symbol: S) -> Result<FundingCurrency, BoxError>
         where S: Into<String>
     {     
         let endpoint: String = format!("ticker/f{}", symbol.into());
@@ -56,7 +58,7 @@ impl Ticker {
         Ok(ticker)
     }    
 
-    pub fn trading_pair<S>(&self, symbol: S) -> Result<TradingPair>
+    pub fn trading_pair<S>(&self, symbol: S) -> Result<TradingPair, BoxError>
         where S: Into<String>
     {     
         let endpoint: String = format!("ticker/t{}", symbol.into());

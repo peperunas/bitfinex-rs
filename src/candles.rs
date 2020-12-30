@@ -1,6 +1,8 @@
-use client::*;
-use errors::*;
 use serde_json::from_str;
+
+
+use crate::client::Client;
+use crate::errors::BoxError;
 
 #[derive(Debug, Clone, Default)]
 pub struct CandleHistoryParams {
@@ -67,25 +69,25 @@ impl Candles {
         }
     }
 
-    pub fn last<S>(&self, symbol: S, timeframe: S) -> Result<Candle>
+    pub fn last<S>(&self, symbol: S, timeframe: S) -> Result<Candle, BoxError>
         where S: Into<String>
-    {    
+    {
         let endpoint: String = format!("candles/trade:{}:t{}/last", timeframe.into(), symbol.into());
         let data = self.client.get(endpoint, String::new())?;
 
         let history: Candle = from_str(data.as_str())?;
 
         Ok(history)
-    }    
+    }
 
     pub fn history<S>(
         &self,
         symbol: S,
         timeframe: S,
         params: &CandleHistoryParams,
-    ) -> Result<Vec<Candle>>
+    ) -> Result<Vec<Candle>, BoxError>
         where S: Into<String>
-    {    
+    {
         let endpoint: String = format!("candles/trade:{}:t{}/hist", timeframe.into(), symbol.into());
         let data = self.client.get(endpoint, params.to_query())?;
 

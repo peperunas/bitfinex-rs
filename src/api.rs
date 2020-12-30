@@ -1,10 +1,10 @@
-use book::*;
-use ticker::*;
-use trades::*;
-use candles::*;
-use orders::*;
-use account::*;
-use ledger::*;
+use crate::account::Account;
+use crate::book::Book;
+use crate::candles::Candles;
+use crate::ledger::Ledger;
+use crate::orders::Orders;
+use crate::ticker::Ticker;
+use crate::trades::Trades;
 
 #[derive(Clone)]
 pub struct Bitfinex {

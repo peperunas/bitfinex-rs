@@ -9,6 +9,7 @@ keywords = ["cryptocurrency", "trading", "bitcoin"]
 documentation = "https://docs.rs/crate/bitfinex/"
 repository = "https://github.com/wisespace-io/bitfinex-rs"
 readme = "README.md"
+edition = "2018"
 
 [badges]
 travis-ci = { repository = "wisespace-io/bitfinex-rs" }

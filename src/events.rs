@@ -1,7 +1,7 @@
-use ticker::*;
-use candles::Candle;
-use trades::{TradingPair as TradesTradingPair, FundingCurrency as TradesFundingCurrency};
-use book::{TradingPair as BookTradingPair, FundingCurrency as BookFundingCurrency, RawBook};
+use crate::book::{FundingCurrency as BookFundingCurrency, RawBook, TradingPair as BookTradingPair};
+use crate::candles::Candle;
+use crate::ticker::{FundingCurrency, TradingPair};
+use crate::trades::{FundingCurrency as TradesFundingCurrency, TradingPair as TradesTradingPair};
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]

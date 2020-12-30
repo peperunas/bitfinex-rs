@@ -1,6 +1,7 @@
-use client::*;
-use errors::*;
+
 use serde_json::from_str;
+use crate::client::Client;
+use crate::errors::BoxError;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Entry {
@@ -40,7 +41,7 @@ impl Ledger {
         start: u128,
         end: u128,
         limit: i32,
-    ) -> Result<Vec<Entry>>
+    ) -> Result<Vec<Entry>, BoxError>
     where
         S: Into<String>,
     {

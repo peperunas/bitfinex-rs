@@ -1,16 +1,16 @@
-use url::Url;
-use errors::*;
-use events::*;
-use serde_json::from_str;
-use auth;
+use std::sync::mpsc::{self, channel};
 
+use serde_json::from_str;
+use tungstenite::client::AutoStream;
 use tungstenite::connect;
+use tungstenite::handshake::client::Response;
 use tungstenite::Message;
 use tungstenite::protocol::WebSocket;
-use tungstenite::client::AutoStream;
-use tungstenite::handshake::client::Response;
+use url::Url;
 
-use std::sync::mpsc::{self, channel};
+use crate::auth;
+use crate::events::{DataEvent, NotificationEvent};
+use crate::errors::BoxError;
 
 static INFO: &'static str = "info";
 static SUBSCRIBED: &'static str = "subscribed";
@@ -23,7 +23,7 @@ pub trait EventHandler {
     fn on_auth(&mut self, event: NotificationEvent);
     fn on_subscribed(&mut self, event: NotificationEvent);
     fn on_data_event(&mut self, event: DataEvent);
-    fn on_error(&mut self, message: Error); 
+    fn on_error(&mut self, message: BoxError);
 }
 
 pub enum EventType {
@@ -59,7 +59,7 @@ impl WebSockets {
         }
     }
 
-    pub fn connect(&mut self) -> Result<()> {
+    pub fn connect(&mut self) -> Result<(), BoxError> {
         let wss: String = format!("{}", WEBSOCKET_URL);
         let url = Url::parse(&wss)?;
 
@@ -94,9 +94,9 @@ impl WebSockets {
         api_secret: S,
         dms: bool,
         filters: &[&str],
-    ) -> Result<()>
-    where
-        S: AsRef<str>,
+    ) -> Result<(), BoxError>
+        where
+            S: AsRef<str>,
     {
         let nonce = auth::generate_nonce()?;
         let auth_payload = format!("AUTH{}", nonce);
@@ -181,10 +181,10 @@ impl WebSockets {
         }
     }
 
-    fn error_hander(&mut self, error_msg: Error) {
+    fn error_hander(&mut self, error_msg: BoxError) {
         if let Some(ref mut h) = self.event_handler {
             h.on_error(error_msg);
-        }        
+        }
     }
 
     fn format_symbol(&mut self, symbol: String, et: EventType) -> String {
@@ -196,7 +196,7 @@ impl WebSockets {
         local_symbol
     }
 
-    pub fn event_loop(&mut self) -> Result<()>  {
+    pub fn event_loop(&mut self) -> Result<(), BoxError> {
         loop {
             if let Some(ref mut socket) = self.socket {
                 loop {
@@ -261,14 +261,11 @@ pub struct Sender {
 }
 
 impl Sender {
-    pub fn send(&self, raw: &str) -> Result<()> {
-        self.tx.send(WsMessage::Text(raw.to_string()))
-            .map_err(|e| Error::with_chain(e, "Not able to send a message"))?;
-        Ok(())
+    pub fn send(&self, raw: &str) -> Result<(), BoxError> {
+        Ok(self.tx.send(WsMessage::Text(raw.to_string()))?)
     }
 
-    pub fn shutdown(&self) -> Result<()> {
-        self.tx.send(WsMessage::Close)
-            .map_err(|e| Error::with_chain(e, "Error during shutdown"))
+    pub fn shutdown(&self) -> Result<(), BoxError> {
+        Ok(self.tx.send(WsMessage::Close)?)
     }
 }

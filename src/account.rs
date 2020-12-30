@@ -1,14 +1,15 @@
-use client::*;
-use errors::*;
 use serde_json::from_str;
 
+use crate::client::Client;
+use crate::errors::BoxError;
+
 #[derive(Serialize, Deserialize)]
-pub struct Wallet { 
-    pub wallet_type: String,   
-    pub currency: String,                   
+pub struct Wallet {
+    pub wallet_type: String,
+    pub currency: String,
     pub balance: f64,
     pub unsettled_interest: f64,
-    pub balance_available: Option<f64>             
+    pub balance_available: Option<f64>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -76,7 +77,7 @@ impl Account {
         }
     }
 
-    pub fn get_wallets(&self) -> Result<Vec<Wallet>> {
+    pub fn get_wallets(&self) -> Result<Vec<Wallet>, BoxError> {
         let payload: String = format!("{}", "{}");
         let data = self.client.post_signed("wallets".into(), payload)?;
 
@@ -85,8 +86,8 @@ impl Account {
         Ok(wallets)
     }
 
-    pub fn margin_base(&self) -> Result<MarginBase>
-    { 
+    pub fn margin_base(&self) -> Result<MarginBase, BoxError>
+    {
         let payload: String = format!("{}", "{}");
 
         let data = self.client.post_signed("info/margin/base".into(), payload)?;
@@ -96,9 +97,9 @@ impl Account {
         Ok(margin)
     }
 
-    pub fn margin_symbol<S>(&self, key: S) -> Result<MarginSymbol> 
+    pub fn margin_symbol<S>(&self, key: S) -> Result<MarginSymbol, BoxError>
         where S: Into<String>
-    { 
+    {
         let payload: String = format!("{}", "{}");
         let request: String = format!("info/margin/t{}", key.into());
 
@@ -107,11 +108,11 @@ impl Account {
         let margin: MarginSymbol = from_str(data.as_str())?;
 
         Ok(margin)
-    }    
+    }
 
-    pub fn funding_info<S>(&self, key: S) -> Result<FundingInfo> 
+    pub fn funding_info<S>(&self, key: S) -> Result<FundingInfo, BoxError>
         where S: Into<String>
-    { 
+    {
         let payload: String = format!("{}", "{}");
         let request: String = format!("info/funding/f{}", key.into());
 
