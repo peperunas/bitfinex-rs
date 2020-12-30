@@ -47,22 +47,22 @@ impl Ticker {
         }
     }
 
-    pub fn funding_currency<S>(&self, symbol: S) -> Result<FundingCurrency, BoxError>
+    pub async fn funding_currency<S>(&self, symbol: S) -> Result<FundingCurrency, BoxError>
         where S: Into<String>
     {     
         let endpoint: String = format!("ticker/f{}", symbol.into());
-        let data = self.client.get(endpoint, String::new())?;
+        let data = self.client.get(endpoint, String::new()).await?;
 
         let ticker: FundingCurrency = from_str(data.as_str())?;
 
         Ok(ticker)
     }    
 
-    pub fn trading_pair<S>(&self, symbol: S) -> Result<TradingPair, BoxError>
+    pub async fn trading_pair<S>(&self, symbol: S) -> Result<TradingPair, BoxError>
         where S: Into<String>
     {     
         let endpoint: String = format!("ticker/t{}", symbol.into());
-        let data = self.client.get(endpoint, String::new())?;
+        let data = self.client.get(endpoint, String::new()).await?;
 
         let ticker: TradingPair = from_str(data.as_str())?;
 

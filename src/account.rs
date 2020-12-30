@@ -77,46 +77,46 @@ impl Account {
         }
     }
 
-    pub fn get_wallets(&self) -> Result<Vec<Wallet>, BoxError> {
+    pub async fn get_wallets(&self) -> Result<Vec<Wallet>, BoxError> {
         let payload: String = format!("{}", "{}");
-        let data = self.client.post_signed("wallets".into(), payload)?;
+        let data = self.client.post_signed("wallets".into(), payload).await?;
 
         let wallets: Vec<Wallet> = from_str(data.as_str())?;
 
         Ok(wallets)
     }
 
-    pub fn margin_base(&self) -> Result<MarginBase, BoxError>
+    pub async fn margin_base(&self) -> Result<MarginBase, BoxError>
     {
         let payload: String = format!("{}", "{}");
 
-        let data = self.client.post_signed("info/margin/base".into(), payload)?;
+        let data = self.client.post_signed("info/margin/base".into(), payload).await?;
 
         let margin: MarginBase = from_str(data.as_str())?;
 
         Ok(margin)
     }
 
-    pub fn margin_symbol<S>(&self, key: S) -> Result<MarginSymbol, BoxError>
+    pub async fn margin_symbol<S>(&self, key: S) -> Result<MarginSymbol, BoxError>
         where S: Into<String>
     {
         let payload: String = format!("{}", "{}");
         let request: String = format!("info/margin/t{}", key.into());
 
-        let data = self.client.post_signed(request, payload)?;
+        let data = self.client.post_signed(request, payload).await?;
 
         let margin: MarginSymbol = from_str(data.as_str())?;
 
         Ok(margin)
     }
 
-    pub fn funding_info<S>(&self, key: S) -> Result<FundingInfo, BoxError>
+    pub async fn funding_info<S>(&self, key: S) -> Result<FundingInfo, BoxError>
         where S: Into<String>
     {
         let payload: String = format!("{}", "{}");
         let request: String = format!("info/funding/f{}", key.into());
 
-        let data = self.client.post_signed(request, payload)?;
+        let data = self.client.post_signed(request, payload).await?;
 
         let info: FundingInfo = from_str(data.as_str())?;
 

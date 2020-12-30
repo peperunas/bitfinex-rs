@@ -36,22 +36,22 @@ impl Book {
         Book { client: Client::new(None, None) }
     }
 
-    pub fn funding_currency<S>(&self, symbol: S, precision: S) -> Result<Vec<FundingCurrency>, BoxError>
+    pub async fn funding_currency<S>(&self, symbol: S, precision: S) -> Result<Vec<FundingCurrency>, BoxError>
         where S: Into<String>
     {
         let endpoint: String = format!("book/f{}/{}", symbol.into(), precision.into());
-        let data = self.client.get(endpoint, String::new())?;
+        let data = self.client.get(endpoint, String::new()).await?;
 
         let book: Vec<FundingCurrency> = from_str(data.as_str())?;
 
         Ok(book)
     }
 
-    pub fn trading_pair<S>(&self, symbol: S, precision: S) -> Result<Vec<TradingPair>, BoxError>
+    pub async fn trading_pair<S>(&self, symbol: S, precision: S) -> Result<Vec<TradingPair>, BoxError>
         where S: Into<String>
     {    
         let endpoint: String = format!("book/t{}/{}", symbol.into(), precision.into());
-        let data = self.client.get(endpoint, String::new())?;
+        let data = self.client.get(endpoint, String::new()).await?;
 
         let book: Vec<TradingPair> = from_str(data.as_str())?;
 

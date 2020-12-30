@@ -46,51 +46,50 @@ impl Trades {
         }
     }
 
-    pub fn funding_currency<S>(&self, symbol: S) -> Result<Vec<FundingCurrency>, BoxError>
+    pub async fn funding_currency<S>(&self, symbol: S) -> Result<Vec<FundingCurrency>, BoxError>
         where S: Into<String>
     {     
         let endpoint: String = format!("trades/f{}/hist", symbol.into());
-        let data = self.client.get(endpoint, String::new())?;
+        let data = self.client.get(endpoint, String::new()).await?;
 
         let trades: Vec<FundingCurrency> = from_str(data.as_str())?;
 
         Ok(trades)
     }
 
-    pub fn trading_pair<S>(&self, symbol: S) -> Result<Vec<TradingPair>, BoxError>
+    pub async fn trading_pair<S>(&self, symbol: S) -> Result<Vec<TradingPair>, BoxError>
         where S: Into<String>
     {
         let endpoint: String = format!("trades/t{}/hist", symbol.into());
-        let data = self.client.get(endpoint, String::new())?;
+        let data = self.client.get(endpoint, String::new()).await?;
 
         let trades: Vec<TradingPair> = from_str(data.as_str())?;
 
         Ok(trades)
     }
 
-    pub fn history<S>(&self, symbol: S) -> Result<Vec<Trade>, BoxError>
+    pub async fn history<S>(&self, symbol: S) -> Result<Vec<Trade>, BoxError>
         where S: Into<String>
     {
         let payload: String = format!("{}", "{}");
-
         let request: String = format!("trades/t{}/hist", symbol.into());
-        println!("HISTORY {}", request);
-        return self.trades(request, payload);
+
+        self.trades(request, payload).await
     }
 
-    pub fn generated_by_order<S>(&self, symbol: S, order_id: S) -> Result<Vec<Trade>, BoxError>
+    pub async fn generated_by_order<S>(&self, symbol: S, order_id: S) -> Result<Vec<Trade>, BoxError>
         where S: Into<String>
     {
         let payload: String = format!("{}", "{}");
-
         let request: String = format!("order/t{}:{}/trades", symbol.into(), order_id.into());
-        return self.trades(request, payload);
+
+        self.trades(request, payload).await
     }   
 
-    pub fn trades<S>(&self, request: S, payload: S) -> Result<Vec<Trade>, BoxError>
+    pub async fn trades<S>(&self, request: S, payload: S) -> Result<Vec<Trade>, BoxError>
         where S: Into<String>
     {
-        let data = self.client.post_signed(request.into(), payload.into())?;
+        let data = self.client.post_signed(request.into(), payload.into()).await?;
 
         let orders: Vec<Trade> = from_str(data.as_str())?;
 

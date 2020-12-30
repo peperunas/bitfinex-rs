@@ -1,5 +1,3 @@
-use std::io::Read;
-
 use reqwest;
 use reqwest::{Response, StatusCode};
 use reqwest::header::{CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue, USER_AGENT};
@@ -26,22 +24,22 @@ impl Client {
         }
     }
 
-    pub fn get(&self, endpoint: String, request: String) -> Result<String, BoxError> {
+    pub async fn get(&self, endpoint: String, request: String) -> Result<String, BoxError> {
         let mut url: String = format!("{}{}", API1_HOST, endpoint);
         if !request.is_empty() {
             url.push_str(format!("?{}", request).as_str());
         }
 
-        let response = reqwest::get(url.as_str())?;
+        let response = reqwest::get(url.as_str()).await?;
 
-        self.handler(response)
+        self.handler(response).await
     }
 
-    pub fn post_signed(&self, request: String, payload: String) -> Result<String, BoxError> {
-        self.post_signed_params(request, payload, NO_PARAMS)
+    pub async fn post_signed(&self, request: String, payload: String) -> Result<String, BoxError> {
+        self.post_signed_params(request, payload, NO_PARAMS).await
     }
 
-    pub fn post_signed_params<P: Serialize + ?Sized>(
+    pub async fn post_signed_params<P: Serialize + ?Sized>(
         &self,
         request: String,
         payload: String,
@@ -54,9 +52,9 @@ impl Client {
             .headers(self.build_headers(request, payload.clone())?)
             .body(payload)
             .query(params)
-            .send()?;
+            .send().await?;
 
-        self.handler(response)
+        self.handler(response).await
     }
 
     fn build_headers(&self, request: String, payload: String) -> Result<HeaderMap, BoxError> {
@@ -75,11 +73,11 @@ impl Client {
         Ok(headers)
     }
 
-    fn handler(&self, mut response: Response) -> Result<String, BoxError> {
+    async fn handler(&self, response: Response) -> Result<String, BoxError> {
         match response.status() {
             StatusCode::OK => {
-                let mut body = String::new();
-                response.read_to_string(&mut body)?;
+                let body = response.text().await?;
+
                 return Ok(body);
             },
             StatusCode::INTERNAL_SERVER_ERROR => {

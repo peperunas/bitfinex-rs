@@ -69,18 +69,18 @@ impl Candles {
         }
     }
 
-    pub fn last<S>(&self, symbol: S, timeframe: S) -> Result<Candle, BoxError>
+    pub async fn last<S>(&self, symbol: S, timeframe: S) -> Result<Candle, BoxError>
         where S: Into<String>
     {
         let endpoint: String = format!("candles/trade:{}:t{}/last", timeframe.into(), symbol.into());
-        let data = self.client.get(endpoint, String::new())?;
+        let data = self.client.get(endpoint, String::new()).await?;
 
         let history: Candle = from_str(data.as_str())?;
 
         Ok(history)
     }
 
-    pub fn history<S>(
+    pub async fn history<S>(
         &self,
         symbol: S,
         timeframe: S,
@@ -89,7 +89,7 @@ impl Candles {
         where S: Into<String>
     {
         let endpoint: String = format!("candles/trade:{}:t{}/hist", timeframe.into(), symbol.into());
-        let data = self.client.get(endpoint, params.to_query())?;
+        let data = self.client.get(endpoint, params.to_query()).await?;
 
         let history: Vec<Candle> = from_str(data.as_str())?;
 

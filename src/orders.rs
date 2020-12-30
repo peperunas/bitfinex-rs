@@ -58,30 +58,30 @@ impl Orders {
         }
     }
 
-    pub fn active_orders(&self) -> Result<Vec<Order>, BoxError> {
+    pub async fn active_orders(&self) -> Result<Vec<Order>, BoxError> {
         let payload: String = format!("{}", "{}");
 
-        self.orders("orders".to_owned(), payload)
+        self.orders("orders".to_owned(), payload).await
     }
 
-    pub fn history<T>(&self, symbol: T) -> Result<Vec<Order>, BoxError>
+    pub async fn history<T>(&self, symbol: T) -> Result<Vec<Order>, BoxError>
         where T: Into<Option<String>>
     {    
         let value = symbol.into().unwrap_or("".into());
         let payload: String = format!("{}", "{}");
 
         if value.is_empty() {
-            return self.orders("orders/hist".into(), payload);
+            return self.orders("orders/hist".into(), payload).await;
         } else {
             let request: String = format!("orders/t{}/hist", value);
-            return self.orders(request, payload);
+            return self.orders(request, payload).await;
         }
     }
 
-    pub fn orders<S>(&self, request: S, payload: S) -> Result<Vec<Order>, BoxError>
+    pub async fn orders<S>(&self, request: S, payload: S) -> Result<Vec<Order>, BoxError>
         where S: Into<String>
     {    
-        let data = self.client.post_signed(request.into(), payload.into())?;
+        let data = self.client.post_signed(request.into(), payload.into()).await?;
 
         let orders: Vec<Order> = from_str(data.as_str())?;
 

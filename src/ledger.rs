@@ -35,7 +35,7 @@ impl Ledger {
         }
     }
 
-    pub fn get_history<S>(
+    pub async fn get_history<S>(
         &self,
         symbol: S,
         start: u128,
@@ -53,7 +53,7 @@ impl Ledger {
             limit: limit,
         };
 
-        let data = self.client.post_signed_params(request, payload, &params)?;
+        let data = self.client.post_signed_params(request, payload, &params).await?;
 
         let entry: Vec<Entry> = from_str(data.as_str())?;
 
