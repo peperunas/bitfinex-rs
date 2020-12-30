@@ -6,7 +6,8 @@ use serde::Serialize;
 use crate::auth;
 use crate::errors::BoxError;
 
-static API1_HOST: &'static str = "https://api.bitfinex.com/v2/";
+static API_PUB_HOST: &'static str = "https://api-pub.bitfinex.com/v2/";
+static API_AUTH_HOST: &'static str = "https://api.bitfinex.com/v2/";
 static API_SIGNATURE_PATH: &'static str = "/api/v2/auth/r/";
 static NO_PARAMS: &'static [(); 0] = &[];
 
@@ -25,7 +26,8 @@ impl Client {
     }
 
     pub async fn get(&self, endpoint: String, request: String) -> Result<String, BoxError> {
-        let mut url: String = format!("{}{}", API1_HOST, endpoint);
+        let mut url: String = format!("{}{}", API_PUB_HOST, endpoint);
+
         if !request.is_empty() {
             url.push_str(format!("?{}", request).as_str());
         }
@@ -45,7 +47,7 @@ impl Client {
         payload: String,
         params: &P,
     ) -> Result<String, BoxError> {
-        let url: String = format!("{}auth/r/{}", API1_HOST, request);
+        let url: String = format!("{}auth/r/{}", API_AUTH_HOST, request);
 
         let client = reqwest::Client::new();
         let response = client.post(url.as_str())
