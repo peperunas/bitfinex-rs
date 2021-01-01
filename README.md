@@ -20,19 +20,3 @@ Add this to your Cargo.toml
 [dependencies]
 bitfinex = { git = "https://github.com/peperunas/bitfinex-rs.git" }
 ```
-
-## PUBLIC ENDPOINTS
-
-Ticker, Trades, Book, Candles, see [example](https://github.com/wisespace-io/bitfinex-rs/blob/master/examples/src/public_endpoints.rs)
-
-## PRIVATE ENDPOINTS
-
-Wallets, Orders, Trades, Margin and Funding Info, see [example](https://github.com/wisespace-io/bitfinex-rs/blob/master/examples/src/private_endpoints.rs)
-
-## PUBLIC CHANNELS (WEBSCOKETS)
-
-Ticker, Trades, Book, Raw Book, Candles, see [example](https://github.com/wisespace-io/bitfinex-rs/blob/master/examples/src/public_channels.rs)
-
-# Other Exchanges
-
-If you use [Binance](https://www.binance.com/) check out my [Rust library for Binance API](https://github.com/wisespace-io/binance-rs)
