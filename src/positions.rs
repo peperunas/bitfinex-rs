@@ -15,7 +15,7 @@ fn coercible<'de, D, T>(deserializer: D) -> Result<T, D::Error> where
     from_str(&coercible_string).map_err(Error::custom)
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct PositionMeta {
     reason: String,
     order_id: u64,
@@ -27,7 +27,7 @@ pub struct PositionMeta {
     trade_amount: f64,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Position {
     symbol: String,
     status: String,

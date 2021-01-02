@@ -3,7 +3,7 @@ use serde_json::from_str;
 use crate::client::Client;
 use crate::errors::BoxError;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Order { 
     pub id: i64,   
     pub group_id: Option<i32>,                   
