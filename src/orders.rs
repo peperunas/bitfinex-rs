@@ -4,7 +4,7 @@ use crate::client::Client;
 use crate::errors::BoxError;
 
 #[derive(Serialize, Deserialize, Clone)]
-pub struct Order { 
+pub struct ActiveOrder {
     pub id: i64,   
     pub group_id: Option<i32>,                   
     pub client_id: i64,
@@ -100,13 +100,13 @@ impl Orders {
         }
     }
 
-    pub async fn active_orders(&self) -> Result<Vec<Order>, BoxError> {
+    pub async fn active_orders(&self) -> Result<Vec<ActiveOrder>, BoxError> {
         let payload: String = format!("{}", "{}");
 
         self.orders("orders".to_owned(), payload).await
     }
 
-    pub async fn history<T>(&self, symbol: T) -> Result<Vec<Order>, BoxError>
+    pub async fn history<T>(&self, symbol: T) -> Result<Vec<ActiveOrder>, BoxError>
         where T: Into<Option<String>>
     {    
         let value = symbol.into().unwrap_or("".into());
@@ -120,12 +120,12 @@ impl Orders {
         }
     }
 
-    pub async fn orders<S>(&self, request: S, payload: S) -> Result<Vec<Order>, BoxError>
+    pub async fn orders<S>(&self, request: S, payload: S) -> Result<Vec<ActiveOrder>, BoxError>
         where S: Into<String>
     {
         let data = self.client.post_signed(request.into(), payload.into()).await?;
 
-        let orders: Vec<Order> = from_str(data.as_str())?;
+        let orders: Vec<ActiveOrder> = from_str(data.as_str())?;
 
         Ok(orders)
     }
