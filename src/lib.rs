@@ -22,7 +22,6 @@ extern crate serde_derive;
 
 mod book;
 mod client;
-mod ticker;
 mod trades;
 mod orders;
 mod account;
@@ -38,3 +37,4 @@ pub mod websockets;
 pub mod events;
 pub mod errors;
 pub mod positions;
+pub mod ticker;
