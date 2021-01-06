@@ -4,7 +4,7 @@ use url;
 use serde_json;
 use tungstenite;
 
-pub type BoxError = Box<dyn std::error::Error + Send + Sync>;
+pub(crate) type BoxError = Box<dyn std::error::Error + Send + Sync>;
 
 error_chain! {
     types {
