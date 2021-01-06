@@ -46,6 +46,7 @@ pub struct ActiveOrder {
     pub placed_id: Option<i32>                      
 }
 
+#[derive(Clone)]
 enum OrderKind {
     Limit,
     ExchangeLimit,
