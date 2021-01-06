@@ -7,7 +7,8 @@
 
 #[macro_use] 
 extern crate error_chain;
-
+#[macro_use]
+extern crate bitflags;
 extern crate hex;
 extern crate ring;
 extern crate reqwest;
