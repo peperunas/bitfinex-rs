@@ -5,7 +5,7 @@ use crate::client::Client;
 use crate::errors::BoxError;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct TradingPair { 
+pub struct TradingPairTicker {
     pub bid: f64,
     pub bid_size: f64,   
     pub ask: f64,                   
@@ -58,13 +58,13 @@ impl Ticker {
         Ok(ticker)
     }    
 
-    pub async fn trading_pair<S>(&self, symbol: S) -> Result<TradingPair, BoxError>
+    pub async fn trading_pair<S>(&self, symbol: S) -> Result<TradingPairTicker, BoxError>
         where S: Into<String>
     {     
         let endpoint: String = format!("ticker/t{}", symbol.into());
         let data = self.client.get(endpoint, String::new()).await?;
 
-        let ticker: TradingPair = from_str(data.as_str())?;
+        let ticker: TradingPairTicker = from_str(data.as_str())?;
 
         Ok(ticker)
     }

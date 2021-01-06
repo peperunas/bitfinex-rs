@@ -1,6 +1,6 @@
 use crate::book::{FundingCurrency as BookFundingCurrency, RawBook, TradingPair as BookTradingPair};
 use crate::candles::Candle;
-use crate::ticker::{FundingCurrency, TradingPair};
+use crate::ticker::{FundingCurrency, TradingPairTicker};
 use crate::trades::{FundingCurrency as TradesFundingCurrency, TradingPair as TradesTradingPair};
 
 #[derive(Debug, Deserialize)]
@@ -18,7 +18,7 @@ pub enum NotificationEvent {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum DataEvent {
-    TickerTradingEvent (i32, TradingPair),
+    TickerTradingEvent (i32, TradingPairTicker),
     TickerFundingEvent (i32, FundingCurrency),
     TradesTradingSnapshotEvent (i32, Vec<TradesTradingPair>),
     TradesTradingUpdateEvent (i32, String, TradesTradingPair),
