@@ -46,6 +46,48 @@ pub struct Order {
     pub placed_id: Option<i32>                      
 }
 
+enum OrderKind {
+    Limit,
+    ExchangeLimit,
+    Market,
+    ExchangeMarket,
+    Stop,
+    ExchangeStop,
+    StopLimit,
+    ExchangeStopLimit,
+    TrailingStop,
+    Fok,
+    ExchangeFok,
+    Ioc,
+    ExchangeIoc
+}
+
+impl OrderKind {
+    const fn as_str(&self) -> &'static str {
+        match *self {
+            OrderKind::Limit => {"LIMIT"}
+            OrderKind::ExchangeLimit => {"EXCHANGE LIMIT"}
+            OrderKind::Market => {"MARKET"}
+            OrderKind::ExchangeMarket => {"EXCHANGE MARKET"}
+            OrderKind::Stop => {"STOP"}
+            OrderKind::ExchangeStop => {"EXCHANGE STOP"}
+            OrderKind::StopLimit => {"STOP LIMIT"}
+            OrderKind::ExchangeStopLimit => {"EXCHANGE STOP LIMIT"}
+            OrderKind::TrailingStop => {"TRAILING STOP"}
+            OrderKind::Fok => {"FOK"}
+            OrderKind::ExchangeFok => {"EXCHANGE FOK"}
+            OrderKind::Ioc => {"IOC"}
+            OrderKind::ExchangeIoc => {"EXCHANGE IOC"}
+        }
+    }
+}
+
+impl ToString for OrderKind {
+    fn to_string(&self) -> String {
+        self.as_str().to_string()
+    }
+}
+
 #[derive(Clone)]
 pub struct Orders {
     client: Client,
@@ -80,7 +122,7 @@ impl Orders {
 
     pub async fn orders<S>(&self, request: S, payload: S) -> Result<Vec<Order>, BoxError>
         where S: Into<String>
-    {    
+    {
         let data = self.client.post_signed(request.into(), payload.into()).await?;
 
         let orders: Vec<Order> = from_str(data.as_str())?;
