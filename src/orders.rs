@@ -47,7 +47,7 @@ pub struct ActiveOrder {
 }
 
 #[derive(Clone)]
-enum OrderKind {
+pub enum OrderKind {
     Limit,
     ExchangeLimit,
     Market,
@@ -88,6 +88,9 @@ impl ToString for OrderKind {
         self.as_str().to_string()
     }
 }
+
+
+
 
 #[derive(Clone)]
 pub struct Orders {
