@@ -92,7 +92,7 @@ impl ToString for OrderKind {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
-struct OrderMeta {
+pub struct OrderMeta {
     aff_code: String
 }
 
@@ -232,8 +232,8 @@ impl OrderForm {
         self
     }
 
-    pub fn with_meta(mut self, flags: u32) -> Self {
-        self.flags = Some(flags);
+    pub fn with_meta(mut self, meta: OrderMeta) -> Self {
+        self.meta = Some(meta);
         self
     }
 }
@@ -263,11 +263,11 @@ impl Orders {
         let value = symbol.into().unwrap_or("".into());
         let payload: String = format!("{}", "{}");
 
-        if value.is_empty() {
-            return self.orders("orders/hist".into(), payload).await;
+        return if value.is_empty() {
+            self.orders("orders/hist".into(), payload).await
         } else {
             let request: String = format!("orders/t{}/hist", value);
-            return self.orders(request, payload).await;
+            self.orders(request, payload).await
         }
     }
 
@@ -279,5 +279,13 @@ impl Orders {
         let orders: Vec<ActiveOrder> = from_str(data.as_str())?;
 
         Ok(orders)
+    }
+
+    pub async fn submit_order(&self, order: &OrderForm) -> Result<ActiveOrder, BoxError> {
+        let data = self.client.post_signed("order/submit".into(), serde_json::to_string(order)?).await?;
+
+        let active_order = from_str(&data)?;
+
+        Ok(active_order)
     }
 }

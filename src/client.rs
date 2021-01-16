@@ -1,6 +1,6 @@
 use reqwest;
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE, USER_AGENT};
 use reqwest::{Response, StatusCode};
-use reqwest::header::{CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue, USER_AGENT};
 use serde::Serialize;
 
 use crate::auth;
@@ -11,7 +11,7 @@ static API_AUTH_HOST: &'static str = "https://api.bitfinex.com/v2/";
 static API_SIGNATURE_PATH: &'static str = "/api/v2/auth/r/";
 static NO_PARAMS: &'static [(); 0] = &[];
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Client {
     api_key: String,
     secret_key: String,
@@ -50,26 +50,38 @@ impl Client {
         let url: String = format!("{}auth/r/{}", API_AUTH_HOST, request);
 
         let client = reqwest::Client::new();
-        let response = client.post(url.as_str())
+        let response = client
+            .post(url.as_str())
             .headers(self.build_headers(request, payload.clone())?)
             .body(payload)
             .query(params)
-            .send().await?;
+            .send()
+            .await?;
 
         self.handler(response).await
     }
 
     fn build_headers(&self, request: String, payload: String) -> Result<HeaderMap, BoxError> {
         let nonce: String = auth::generate_nonce()?;
-        let signature_path: String = format!("{}{}{}{}", API_SIGNATURE_PATH, request, nonce, payload);
+        let signature_path: String =
+            format!("{}{}{}{}", API_SIGNATURE_PATH, request, nonce, payload);
 
         let signature = auth::sign_payload(self.secret_key.as_bytes(), signature_path.as_bytes())?;
 
         let mut headers = HeaderMap::new();
         headers.insert(USER_AGENT, HeaderValue::from_static("bitfinex-rs"));
-        headers.insert(HeaderName::from_static("bfx-nonce"), HeaderValue::from_str(nonce.as_str())?);
-        headers.insert(HeaderName::from_static("bfx-apikey"), HeaderValue::from_str(self.api_key.as_str())?);
-        headers.insert(HeaderName::from_static("bfx-signature"), HeaderValue::from_str(signature.as_str())?);
+        headers.insert(
+            HeaderName::from_static("bfx-nonce"),
+            HeaderValue::from_str(nonce.as_str())?,
+        );
+        headers.insert(
+            HeaderName::from_static("bfx-apikey"),
+            HeaderValue::from_str(self.api_key.as_str())?,
+        );
+        headers.insert(
+            HeaderName::from_static("bfx-signature"),
+            HeaderValue::from_str(signature.as_str())?,
+        );
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 
         Ok(headers)
@@ -81,7 +93,7 @@ impl Client {
                 let body = response.text().await?;
 
                 return Ok(body);
-            },
+            }
             StatusCode::INTERNAL_SERVER_ERROR => {
                 bail!("Internal Server Error");
             }
@@ -99,5 +111,4 @@ impl Client {
             }
         };
     }
-
 }
