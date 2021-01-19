@@ -4,6 +4,7 @@ use std::fmt::Display;
 
 use crate::client::Client;
 use crate::errors::BoxError;
+use serde::{Serialize, Serializer};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ActiveOrder {
@@ -48,7 +49,7 @@ pub struct ActiveOrder {
     pub placed_id: Option<i32>                      
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Deserialize)]
 pub enum OrderKind {
     Limit,
     ExchangeLimit,
@@ -91,6 +92,13 @@ impl ToString for OrderKind {
     }
 }
 
+impl Serialize for OrderKind {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error> where
+        S: Serializer {
+        serializer.serialize_str(self.as_str())
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 pub struct OrderMeta {
     aff_code: String
@@ -105,12 +113,19 @@ impl OrderMeta {
 bitflags! {
     #[derive(Serialize, Deserialize)]
     pub struct OrderFlag: u32 {
+        const NONE = 0;
         const HIDDEN = 64;
         const CLOSE = 512;
         const REDUCE_ONLY = 1024;
         const POST_ONLY = 4096;
         const OCO = 16384;
         const NO_VAR_RATES = 524288;
+    }
+}
+
+impl Default for OrderFlag {
+    fn default() -> Self {
+        OrderFlag::NONE
     }
 }
 
@@ -124,6 +139,7 @@ pub struct OrderForm {
     /// STOP, EXCHANGE STOP, STOP LIMIT, EXCHANGE STOP LIMIT,
     /// TRAILING STOP, EXCHANGE TRAILING STOP, FOK,
     /// EXCHANGE FOK, IOC, EXCHANGE IOC
+    #[serde(rename="type")]
     order_type: OrderKind,
     /// Symbol for desired pair
     symbol: String,
@@ -136,6 +152,7 @@ pub struct OrderForm {
     /// Set the leverage for a derivative order, supported by derivative symbol orders only.
     /// The value should be between 1 and 100 inclusive.
     /// The field is optional, if omitted the default leverage value of 10 will be used.
+    #[serde(rename="lev")]
     leverage: Option<u32>,
     /// The trailing price for a trailing stop order
     price_trailing: Option<String>,
@@ -158,7 +175,7 @@ impl OrderForm {
             symbol,
             price: price.to_string(),
             amount: amount.to_string(),
-            flags: None,
+            flags: Some(OrderFlag::default().bits),
             leverage: None,
             price_trailing: None,
             price_aux_limit: None,
@@ -198,7 +215,7 @@ impl OrderForm {
         }
     }
 
-    pub fn price_aux_limit(mut self, limit: f64) -> Result<Self, BoxError> {
+    pub fn with_price_aux_limit(mut self, limit: f64) -> Result<Self, BoxError> {
         match self.order_type {
             OrderKind::StopLimit | OrderKind::ExchangeStopLimit => {
                 self.price_aux_limit = Some(limit.to_string());
@@ -208,7 +225,7 @@ impl OrderForm {
         }
     }
 
-    pub fn price_oco_stop(mut self, oco_stop: f64) -> Result<Self, BoxError> {
+    pub fn with_price_oco_stop(mut self, oco_stop: f64) -> Result<Self, BoxError> {
         match self.flags {
             None => Err("No flags set.".into()),
             Some(flags) => {
