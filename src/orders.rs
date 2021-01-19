@@ -132,8 +132,10 @@ impl Default for OrderFlag {
 #[derive(Serialize, Clone)]
 pub struct OrderForm {
     /// Group id for the order
+    #[serde(skip_serializing_if = "Option::is_none")]
     gid: Option<u32>,
     /// Should be unique in the day (UTC) (not enforced)
+    #[serde(skip_serializing_if = "Option::is_none")]
     cid: Option<u32>,
     /// Order Type: LIMIT, EXCHANGE LIMIT, MARKET, EXCHANGE MARKET,
     /// STOP, EXCHANGE STOP, STOP LIMIT, EXCHANGE STOP LIMIT,
@@ -148,11 +150,13 @@ pub struct OrderForm {
     /// Amount of order (positive for buy, negative for sell)
     amount: String,
     /// Optional see https://docs.bitfinex.com/v2/docs/flag-values
+    #[serde(skip_serializing_if = "Option::is_none")]
     flags: Option<u32>,
     /// Set the leverage for a derivative order, supported by derivative symbol orders only.
     /// The value should be between 1 and 100 inclusive.
     /// The field is optional, if omitted the default leverage value of 10 will be used.
     #[serde(rename="lev")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     leverage: Option<u32>,
     /// The trailing price for a trailing stop order
     price_trailing: Option<String>,
@@ -161,8 +165,10 @@ pub struct OrderForm {
     /// OCO stop price
     price_oco_stop: Option<String>,
     /// Time-In-Force: datetime for automatic order cancellation (ie. 2020-01-01 10:45:23) )
+    #[serde(skip_serializing_if = "Option::is_none")]
     tif: Option<String>,
     /// The meta object allows you to pass along an affiliate code inside the object
+    #[serde(skip_serializing_if = "Option::is_none")]
     meta: Option<OrderMeta>,
 }
 
