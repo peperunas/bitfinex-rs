@@ -1,20 +1,9 @@
-use serde::{Deserialize, Deserializer};
-use serde::de::DeserializeOwned;
 use serde_json::from_str;
 
 use crate::client::Client;
 use crate::errors::BoxError;
 use std::collections::HashMap;
-
-fn coercible<'de, D, T>(deserializer: D) -> Result<T, D::Error> where
-    T: DeserializeOwned,
-    D: Deserializer<'de> {
-    use serde::de::Error;
-
-    let coercible_string = String::deserialize(deserializer)?;
-
-    from_str(&coercible_string).map_err(Error::custom)
-}
+use crate::endpoints::AuthenticatedEndpoint;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Position {
@@ -110,7 +99,8 @@ impl Positions {
     }
 
     pub async fn active_positions(&self) -> Result<Vec<Position>, BoxError> {
-        let post = self.client.post_signed("positions".into(), "{}".into()).await?;
+        let endpoint = AuthenticatedEndpoint::RetrievePositions;
+        let post = self.client.post_signed(&endpoint, "{}".into()).await?;
 
         Ok(from_str(&post)?)
     }

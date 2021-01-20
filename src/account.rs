@@ -2,6 +2,7 @@ use serde_json::from_str;
 
 use crate::client::Client;
 use crate::errors::BoxError;
+use crate::endpoints::{AuthenticatedEndpoint, MarginInfoKey};
 
 #[derive(Serialize, Deserialize)]
 pub struct Wallet {
@@ -13,24 +14,24 @@ pub struct Wallet {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct MarginBase { 
+pub struct MarginBase {
     key: String,
-    pub margin: Base
+    pub margin: Base,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct Base {
     pub user_profit_loss: f64,
-    pub user_swaps: f64,      
+    pub user_swaps: f64,
     pub margin_balance: f64,
-    pub margin_net: f64        
+    pub margin_net: f64,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct MarginSymbol { 
+pub struct MarginSymbol {
     key: String,
-    symbol: String,    
-    pub margin: Symbol
+    symbol: String,
+    pub margin: Symbol,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -47,14 +48,14 @@ pub struct Symbol {
     #[serde(skip_serializing)]
     _placeholder_3: Option<String>,
     #[serde(skip_serializing)]
-    _placeholder_4: Option<String>
+    _placeholder_4: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct FundingInfo { 
+pub struct FundingInfo {
     key: String,
-    symbol: String,    
-    pub funding: Funding
+    symbol: String,
+    pub funding: Funding,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -62,7 +63,7 @@ pub struct Funding {
     pub yield_loan: f64,
     pub yield_lend: f64,
     pub duration_loan: f64,
-    pub duration_lend: f64
+    pub duration_lend: f64,
 }
 
 #[derive(Clone)]
@@ -78,48 +79,34 @@ impl Account {
     }
 
     pub async fn get_wallets(&self) -> Result<Vec<Wallet>, BoxError> {
-        let payload: String = format!("{}", "{}");
-        let data = self.client.post_signed("wallets".into(), payload).await?;
+        let endpoint = AuthenticatedEndpoint::Wallets;
+        let data = self.client.post_signed(&endpoint, "{}".into()).await?;
 
-        let wallets: Vec<Wallet> = from_str(data.as_str())?;
-
-        Ok(wallets)
+        Ok(from_str(data.as_str())?)
     }
 
     pub async fn margin_base(&self) -> Result<MarginBase, BoxError>
     {
-        let payload: String = format!("{}", "{}");
+        let endpoint = AuthenticatedEndpoint::MarginInfo{key: MarginInfoKey::Base};
+        let data = self.client.post_signed(&endpoint, "{}".into()).await?;
 
-        let data = self.client.post_signed("info/margin/base".into(), payload).await?;
-
-        let margin: MarginBase = from_str(data.as_str())?;
-
-        Ok(margin)
+        Ok(from_str(data.as_str())?)
     }
 
-    pub async fn margin_symbol<S>(&self, key: S) -> Result<MarginSymbol, BoxError>
-        where S: Into<String>
+    pub async fn margin_symbol<S: ToString>(&self, key: S) -> Result<MarginSymbol, BoxError>
     {
-        let payload: String = format!("{}", "{}");
-        let request: String = format!("info/margin/t{}", key.into());
+        let endpoint = AuthenticatedEndpoint::MarginInfo {key: MarginInfoKey::Symbol(key.to_string())};
+        let data = self.client.post_signed(&endpoint, "{}".into()).await?;
 
-        let data = self.client.post_signed(request, payload).await?;
-
-        let margin: MarginSymbol = from_str(data.as_str())?;
-
-        Ok(margin)
+        Ok(from_str(data.as_str())?)
     }
 
     pub async fn funding_info<S>(&self, key: S) -> Result<FundingInfo, BoxError>
         where S: Into<String>
     {
-        let payload: String = format!("{}", "{}");
-        let request: String = format!("info/funding/f{}", key.into());
+        let endpoint = AuthenticatedEndpoint::FundingInfo {symbol: key.into()};
+        let data = self.client.post_signed(&endpoint, "{}".into()).await?;
 
-        let data = self.client.post_signed(request, payload).await?;
-
-        let info: FundingInfo = from_str(data.as_str())?;
-
-        Ok(info)
-    }    
+        Ok(from_str(data.as_str())?)
+    }
 }

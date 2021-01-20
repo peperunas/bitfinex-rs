@@ -41,7 +41,7 @@ pub struct WebSockets {
     socket: Option<(WebSocket<AutoStream>, Response)>,
     sender: Sender,
     rx: mpsc::Receiver<WsMessage>,
-    event_handler: Option<Box< dyn EventHandler>>, 
+    event_handler: Option<Box< dyn EventHandler>>,
 }
 
 impl WebSockets {
@@ -144,11 +144,11 @@ impl WebSockets {
 
         if let Err(error_msg) = self.sender.send(&msg.to_string()) {
             self.error_hander(error_msg);
-        } 
+        }
     }
 
-    pub fn subscribe_books<S, P, F>(&mut self, symbol: S, et: EventType, prec: P, freq: F, len: u32) 
-        where S: Into<String>, P: Into<String>, F: Into<String> 
+    pub fn subscribe_books<S, P, F>(&mut self, symbol: S, et: EventType, prec: P, freq: F, len: u32)
+        where S: Into<String>, P: Into<String>, F: Into<String>
     {
         let msg = json!(
             {
@@ -166,7 +166,7 @@ impl WebSockets {
     }
 
     pub fn subscribe_raw_books<S>(&mut self, symbol: S, et: EventType)
-        where S: Into<String> 
+        where S: Into<String>
     {
         let msg = json!(
             {
@@ -251,7 +251,7 @@ impl WebSockets {
                 }
             }
         }
-    } 
+    }
 }
 
 

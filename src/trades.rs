@@ -1,5 +1,7 @@
 use serde_json::from_str;
+
 use crate::client::Client;
+use crate::endpoints::{PublicEndpoint, AuthenticatedEndpoint};
 use crate::errors::BoxError;
 
 #[derive(Serialize, Deserialize)]
@@ -14,7 +16,7 @@ pub struct Trade {
     pub order_price: f64,
     pub maker: i32,
     pub fee: f64,
-    pub fee_currency: String
+    pub fee_currency: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -22,7 +24,7 @@ pub struct TradingPair {
     pub mts: i64,
     pub amount: f64,
     pub price: f64,
-    pub rate: f64
+    pub rate: f64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -31,7 +33,7 @@ pub struct FundingCurrency {
     pub amount: f64,
     pub price: f64,
     pub rate: f64,
-    pub period: i64
+    pub period: i64,
 }
 
 #[derive(Clone)]
@@ -48,51 +50,35 @@ impl Trades {
 
     pub async fn funding_currency<S>(&self, symbol: S) -> Result<Vec<FundingCurrency>, BoxError>
         where S: Into<String>
-    {     
-        let endpoint: String = format!("trades/f{}/hist", symbol.into());
-        let data = self.client.get(endpoint, String::new()).await?;
+    {
+        let endpoint = PublicEndpoint::Trades { symbol: format!("f{}", symbol.into()) };
+        let data = self.client.get(endpoint).await?;
 
-        let trades: Vec<FundingCurrency> = from_str(data.as_str())?;
-
-        Ok(trades)
+        Ok(from_str(data.as_str())?)
     }
 
     pub async fn trading_pair<S>(&self, symbol: S) -> Result<Vec<TradingPair>, BoxError>
         where S: Into<String>
     {
-        let endpoint: String = format!("trades/t{}/hist", symbol.into());
-        let data = self.client.get(endpoint, String::new()).await?;
+        let endpoint = PublicEndpoint::Trades { symbol: format!("t{}", symbol.into()) };
+        let data = self.client.get(endpoint).await?;
 
-        let trades: Vec<TradingPair> = from_str(data.as_str())?;
-
-        Ok(trades)
+        Ok(from_str(data.as_str())?)
     }
 
-    pub async fn history<S>(&self, symbol: S) -> Result<Vec<Trade>, BoxError>
-        where S: Into<String>
+    pub async fn history<S: ToString>(&self, symbol: S) -> Result<Vec<Trade>, BoxError>
     {
-        let payload: String = format!("{}", "{}");
-        let request: String = format!("trades/t{}/hist", symbol.into());
+        let endpoint = AuthenticatedEndpoint::OrdersHistory {symbol: Some(symbol.to_string())};
+        let data = self.client.post_signed(&endpoint, "{}".into()).await?;
 
-        self.trades(request, payload).await
+        Ok(from_str(&data)?)
     }
 
-    pub async fn generated_by_order<S>(&self, symbol: S, order_id: S) -> Result<Vec<Trade>, BoxError>
-        where S: Into<String>
+    pub async fn generated_by_order<S: ToString>(&self, symbol: S, order_id: u64) -> Result<Vec<Trade>, BoxError>
     {
-        let payload: String = format!("{}", "{}");
-        let request: String = format!("order/t{}:{}/trades", symbol.into(), order_id.into());
+        let endpoint = AuthenticatedEndpoint::OrderTrades {symbol: symbol.to_string(), order_id};
+        let data = self.client.post_signed(&endpoint, "{}".into()).await?;
 
-        self.trades(request, payload).await
-    }   
-
-    pub async fn trades<S>(&self, request: S, payload: S) -> Result<Vec<Trade>, BoxError>
-        where S: Into<String>
-    {
-        let data = self.client.post_signed(request.into(), payload.into()).await?;
-
-        let orders: Vec<Trade> = from_str(data.as_str())?;
-
-        Ok(orders)
-    }    
+        Ok(from_str(&data)?)
+    }
 }

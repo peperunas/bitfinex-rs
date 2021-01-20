@@ -2,6 +2,7 @@
 use serde_json::from_str;
 use crate::client::Client;
 use crate::errors::BoxError;
+use crate::endpoints::AuthenticatedEndpoint;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Entry {
@@ -45,18 +46,14 @@ impl Ledger {
     where
         S: Into<String>,
     {
-        let payload: String = format!("{}", "{}");
-        let request: String = format!("ledgers/{}/hist", symbol.into());
+        let endpoint = AuthenticatedEndpoint::Ledgers {symbol: symbol.into()};
         let params = HistoryParams{
             start: format!("{}", start),
             end: format!("{}", end),
             limit: limit,
         };
+        let data = self.client.post_signed_params(&endpoint, "{}".into(), &params).await?;
 
-        let data = self.client.post_signed_params(request, payload, &params).await?;
-
-        let entry: Vec<Entry> = from_str(data.as_str())?;
-
-        Ok(entry)
+        Ok(from_str(data.as_str())?)
     }
 }

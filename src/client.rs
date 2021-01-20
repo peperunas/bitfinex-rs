@@ -1,14 +1,12 @@
 use reqwest;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE, USER_AGENT};
 use reqwest::{Response, StatusCode};
+use reqwest::header::{CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue, USER_AGENT};
 use serde::Serialize;
 
 use crate::auth;
 use crate::errors::BoxError;
+use crate::endpoints::{PublicEndpoint, AuthenticatedEndpoint};
 
-static API_PUB_HOST: &'static str = "https://api-pub.bitfinex.com/v2/";
-static API_AUTH_HOST: &'static str = "https://api.bitfinex.com/v2/";
-static API_SIGNATURE_PATH: &'static str = "/api/v2/auth/r/";
 static NO_PARAMS: &'static [(); 0] = &[];
 
 #[derive(Clone, Debug)]
@@ -25,34 +23,27 @@ impl Client {
         }
     }
 
-    pub async fn get(&self, endpoint: String, request: String) -> Result<String, BoxError> {
-        let mut url: String = format!("{}{}", API_PUB_HOST, endpoint);
-
-        if !request.is_empty() {
-            url.push_str(format!("?{}", request).as_str());
-        }
-
-        let response = reqwest::get(url.as_str()).await?;
+    pub async fn get(&self, endpoint: PublicEndpoint) -> Result<String, BoxError> {
+        let response = reqwest::get(&endpoint.to_string()).await?;
 
         self.handler(response).await
     }
 
-    pub async fn post_signed(&self, request: String, payload: String) -> Result<String, BoxError> {
-        self.post_signed_params(request, payload, NO_PARAMS).await
+    pub async fn post_signed(&self, endpoint: &AuthenticatedEndpoint, payload: String) -> Result<String, BoxError> {
+        self.post_signed_params(endpoint, payload, NO_PARAMS).await
     }
 
     pub async fn post_signed_params<P: Serialize + ?Sized>(
         &self,
-        request: String,
+        endpoint: &AuthenticatedEndpoint,
         payload: String,
         params: &P,
     ) -> Result<String, BoxError> {
-        let url: String = format!("{}auth/r/{}", API_AUTH_HOST, request);
-
         let client = reqwest::Client::new();
+
         let response = client
-            .post(url.as_str())
-            .headers(self.build_headers(request, payload.clone())?)
+            .post(&endpoint.to_string())
+            .headers(self.build_headers(&endpoint, payload.clone())?)
             .body(payload)
             .query(params)
             .send()
@@ -61,10 +52,10 @@ impl Client {
         self.handler(response).await
     }
 
-    fn build_headers(&self, request: String, payload: String) -> Result<HeaderMap, BoxError> {
+    fn build_headers(&self, endpoint: &AuthenticatedEndpoint, payload: String) -> Result<HeaderMap, BoxError> {
         let nonce: String = auth::generate_nonce()?;
-        let signature_path: String =
-            format!("{}{}{}{}", API_SIGNATURE_PATH, request, nonce, payload);
+        let path = endpoint.to_string().strip_prefix(AuthenticatedEndpoint::HOST).ok_or("Invalid endpoint")?.to_owned();
+        let signature_path = format!("/api{}{}{}", path, nonce, payload);
 
         let signature = auth::sign_payload(self.secret_key.as_bytes(), signature_path.as_bytes())?;
 
@@ -95,19 +86,19 @@ impl Client {
                 return Ok(body);
             }
             StatusCode::INTERNAL_SERVER_ERROR => {
-                bail!("Internal Server Error");
+                bail!("Internal Server Error: {}",  response.text().await?);
             }
             StatusCode::SERVICE_UNAVAILABLE => {
-                bail!("Service Unavailable");
+                bail!("Service Unavailable: {}", response.text().await?);
             }
             StatusCode::UNAUTHORIZED => {
-                bail!("Unauthorized");
+                bail!("Unauthorized: {}", response.text().await?);
             }
             StatusCode::BAD_REQUEST => {
-                bail!(format!("Bad Request: {:?}", response));
+                bail!(format!("Bad Request: {}", response.text().await?));
             }
             s => {
-                bail!(format!("Received response: {:?}", s));
+                bail!(format!("Received response {}: {}", s, response.text().await?));
             }
         };
     }
