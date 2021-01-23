@@ -500,6 +500,8 @@ pub enum OrderKind {
     ExchangeStopLimit,
     #[serde(rename = "TRAILING STOP")]
     TrailingStop,
+    #[serde(rename = "EXCHANGE TRAILING STOP")]
+    ExchangeTrailingStop,
     #[serde(rename = "FOK")]
     Fok,
     #[serde(rename = "EXCHANGE FOK")]
