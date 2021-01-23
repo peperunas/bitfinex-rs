@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
-use chrono::{DateTime, TimeZone};
-use serde::{Deserialize, Deserializer};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, TimeZone, Utc};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::Error;
 use serde_json::{from_str, Value};
 
@@ -11,12 +11,12 @@ use crate::errors::BoxError;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct ActiveOrder {
-    pub id: i64,
-    pub group_id: Option<i32>,
-    pub client_id: i64,
+    pub id: u64,
+    pub group_id: Option<u32>,
+    pub client_id: u64,
     pub symbol: String,
-    pub creation_timestamp: i64,
-    pub update_timestamp: i64,
+    pub creation_timestamp: u64,
+    pub update_timestamp: u64,
     pub amount: f64,
     pub amount_original: f64,
     pub order_type: String,
@@ -27,7 +27,7 @@ pub struct ActiveOrder {
     #[serde(skip_serializing)]
     _placeholder_2: Option<String>,
 
-    pub flags: Option<i32>,
+    pub flags: Option<u32>,
     pub order_status: Option<String>,
 
     #[serde(skip_serializing)]
@@ -47,8 +47,8 @@ pub struct ActiveOrder {
     #[serde(skip_serializing)]
     _placeholder_7: Option<String>,
 
-    pub notify: i32,
-    pub hidden: i32,
+    pub notify: u32,
+    pub hidden: u32,
     pub placed_id: Option<i32>,
 }
 
@@ -117,18 +117,110 @@ pub struct OrderResponse {
     text: String,
 }
 
+impl OrderResponse {
+    pub fn mts(&self) -> u64 {
+        self.mts
+    }
+    pub fn response_type(&self) -> &OrderResponseKind {
+        &self.response_type
+    }
+    pub fn message_id(&self) -> Option<u64> {
+        self.message_id
+    }
+    pub fn id(&self) -> u64 {
+        self.id
+    }
+    pub fn gid(&self) -> Option<u64> {
+        self.gid
+    }
+    pub fn cid(&self) -> u64 {
+        self.cid
+    }
+    pub fn symbol(&self) -> &str {
+        &self.symbol
+    }
+    pub fn mts_create(&self) -> u64 {
+        self.mts_create
+    }
+    pub fn mts_update(&self) -> u64 {
+        self.mts_update
+    }
+    pub fn amount(&self) -> f64 {
+        self.amount
+    }
+    pub fn amount_orig(&self) -> f64 {
+        self.amount_orig
+    }
+    pub fn order_type(&self) -> OrderKind {
+        self.order_type
+    }
+    pub fn prev_order_type(&self) -> Option<OrderKind> {
+        self.prev_order_type
+    }
+    pub fn mts_tif(&self) -> Option<u64> {
+        self.mts_tif
+    }
+    pub fn order_status(&self) -> &str {
+        &self.order_status
+    }
+    pub fn price(&self) -> f64 {
+        self.price
+    }
+    pub fn price_avg(&self) -> f64 {
+        self.price_avg
+    }
+    pub fn price_trailing(&self) -> f64 {
+        self.price_trailing
+    }
+    pub fn price_aux_limit(&self) -> f64 {
+        self.price_aux_limit
+    }
+    pub fn hidden(&self) -> bool {
+        self.hidden
+    }
+    pub fn placed_id(&self) -> Option<u64> {
+        self.placed_id
+    }
+    pub fn routing(&self) -> &str {
+        &self.routing
+    }
+    pub fn flags(&self) -> OrderFlags {
+        self.flags
+    }
+    pub fn meta(&self) -> &Option<String> {
+        &self.meta
+    }
+    pub fn code(&self) -> u64 {
+        self.code
+    }
+    pub fn status(&self) -> &str {
+        &self.status
+    }
+    pub fn text(&self) -> &str {
+        &self.text
+    }
+}
+
 impl<'de> Deserialize<'de> for OrderResponse {
     fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error> where
         D: Deserializer<'de> {
         let value = Value::deserialize(deserializer)?;
 
-        // this is a list with a list
-        let mut middle_list_iter = value.get(4).ok_or(D::Error::custom("Missing central array"))?
-            .as_array().ok_or(D::Error::custom("Invalid central array"))?
+        // this can either be an array within an array
+        // OR an array on itself
+        let mut middle_list_iter = {
+            let middle_list = value.get(4).ok_or(D::Error::custom("Missing central array"))?
+                .as_array().ok_or(D::Error::custom("Invalid central array"))?;
+
             // accessing the inner list
-            .iter().next()
-            .ok_or(D::Error::custom("Missing inner array"))?
-            .as_array().ok_or(D::Error::custom("Invalid inner array"))?.iter();
+            // checking if it is an array on its own or not
+            match middle_list.iter().next()
+                .ok_or(D::Error::custom("Empty central array"))?
+                .as_array() {
+                Some(array) => array.into_iter(),
+                None => {middle_list.into_iter()}
+            }
+        };
 
         let mts = value.get(0).ok_or(D::Error::custom("Missing mts"))?
             .as_f64().ok_or(D::Error::custom("Invalid mts value"))?
@@ -475,6 +567,39 @@ impl OrderForm {
     }
 }
 
+#[derive(Serialize)]
+pub struct CancelOrderForm {
+    id: u64,
+    #[serde(rename = "cid")]
+    client_id: u64,
+    #[serde(rename = "cid_date")]
+    client_id_date: CancelOrderDateTime,
+}
+
+impl CancelOrderForm {
+    pub fn new<Tz: TimeZone>(id: u64, client_id: u64, client_id_date: DateTime<Tz>) -> Self {
+        let naive_date = client_id_date.naive_utc().date();
+
+        CancelOrderForm { id, client_id, client_id_date: CancelOrderDateTime { date: naive_date } }
+    }
+}
+
+struct CancelOrderDateTime {
+    date: NaiveDate
+}
+
+impl Serialize for CancelOrderDateTime {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error> where
+        S: Serializer {
+        serializer.serialize_str(&self.date.format("%Y-%m-%d").to_string())
+    }
+}
+
+impl From<ActiveOrder> for CancelOrderForm {
+    fn from(o: ActiveOrder) -> Self {
+        Self::new::<Utc>(o.id, o.client_id, DateTime::from_utc(NaiveDateTime::from_timestamp(o.update_timestamp as i64, 0), Utc))
+    }
+}
 
 #[derive(Clone)]
 pub struct Orders {
@@ -510,6 +635,13 @@ impl Orders {
     pub async fn submit_order(&self, order: &OrderForm) -> Result<OrderResponse, BoxError> {
         let endpoint = AuthenticatedEndpoint::SubmitOrder;
         let data = self.client.post_signed(&endpoint, serde_json::to_string(order)?).await?;
+
+        Ok(from_str(&data)?)
+    }
+
+    pub async fn cancel_order(&self, order_form: &CancelOrderForm) -> Result<OrderResponse, BoxError> {
+        let endpoint = AuthenticatedEndpoint::CancelOrder;
+        let data = self.client.post_signed(&endpoint, serde_json::to_string(order_form)?).await?;
 
         Ok(from_str(&data)?)
     }
