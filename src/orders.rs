@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use chrono::{DateTime, NaiveDate, NaiveDateTime, TimeZone, Utc};
+use chrono::{DateTime, NaiveDate, TimeZone};
 use serde::de::Error;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{from_str, Value};
@@ -512,7 +512,7 @@ pub enum OrderKind {
     ExchangeIoc,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct OrderMeta {
     aff_code: String,
 }
@@ -536,7 +536,7 @@ bitflags! {
     }
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 pub struct OrderForm {
     /// Group id for the order
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -670,21 +670,30 @@ impl OrderForm {
 
 #[derive(Serialize)]
 pub struct CancelOrderForm {
-    id: u64,
-    #[serde(rename = "cid")]
-    client_id: u64,
-    #[serde(rename = "cid_date")]
-    client_id_date: CancelOrderDateTime,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    id: Option<u64>,
+    #[serde(rename = "cid", skip_serializing_if = "Option::is_none")]
+    client_id: Option<u64>,
+    #[serde(rename = "cid_date", skip_serializing_if = "Option::is_none")]
+    client_id_date: Option<CancelOrderDateTime>,
 }
 
 impl CancelOrderForm {
-    pub fn new<Tz: TimeZone>(id: u64, client_id: u64, client_id_date: DateTime<Tz>) -> Self {
+    pub fn from_id(id: u64) -> Self {
+        CancelOrderForm {
+            id: Some(id),
+            client_id: None,
+            client_id_date: None,
+        }
+    }
+
+    pub fn from_client<Tz: TimeZone>(client_id: u64, client_id_date: DateTime<Tz>) -> Self {
         let naive_date = client_id_date.naive_utc().date();
 
         CancelOrderForm {
-            id,
-            client_id,
-            client_id_date: CancelOrderDateTime { date: naive_date },
+            id: None,
+            client_id: Some(client_id),
+            client_id_date: Some(CancelOrderDateTime { date: naive_date }),
         }
     }
 }
@@ -704,14 +713,7 @@ impl Serialize for CancelOrderDateTime {
 
 impl From<ActiveOrder> for CancelOrderForm {
     fn from(o: ActiveOrder) -> Self {
-        Self::new::<Utc>(
-            o.id,
-            o.client_id,
-            DateTime::from_utc(
-                NaiveDateTime::from_timestamp(o.update_timestamp as i64, 0),
-                Utc,
-            ),
-        )
+        Self::from_id(o.id)
     }
 }
 
@@ -764,6 +766,7 @@ impl Orders {
         order_form: &CancelOrderForm,
     ) -> Result<OrderResponse, BoxError> {
         let endpoint = AuthenticatedEndpoint::CancelOrder;
+
         let data = self
             .client
             .post_signed(&endpoint, serde_json::to_string(order_form)?)
