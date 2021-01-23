@@ -1,8 +1,8 @@
 use std::fmt::Display;
 
 use chrono::{DateTime, NaiveDate, NaiveDateTime, TimeZone, Utc};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::Error;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{from_str, Value};
 
 use crate::client::Client;
@@ -202,138 +202,237 @@ impl OrderResponse {
 }
 
 impl<'de> Deserialize<'de> for OrderResponse {
-    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error> where
-        D: Deserializer<'de> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
+    where
+        D: Deserializer<'de>,
+    {
         let value = Value::deserialize(deserializer)?;
 
         // this can either be an array within an array
         // OR an array on itself
         let mut middle_list_iter = {
-            let middle_list = value.get(4).ok_or(D::Error::custom("Missing central array"))?
-                .as_array().ok_or(D::Error::custom("Invalid central array"))?;
+            let middle_list = value
+                .get(4)
+                .ok_or(D::Error::custom("Missing central array"))?
+                .as_array()
+                .ok_or(D::Error::custom("Invalid central array"))?;
 
             // accessing the inner list
             // checking if it is an array on its own or not
-            match middle_list.iter().next()
+            match middle_list
+                .iter()
+                .next()
                 .ok_or(D::Error::custom("Empty central array"))?
-                .as_array() {
+                .as_array()
+            {
                 Some(array) => array.into_iter(),
-                None => {middle_list.into_iter()}
+                None => middle_list.into_iter(),
             }
         };
 
-        let mts = value.get(0).ok_or(D::Error::custom("Missing mts"))?
-            .as_f64().ok_or(D::Error::custom("Invalid mts value"))?
+        let mts = value
+            .get(0)
+            .ok_or(D::Error::custom("Missing mts"))?
+            .as_f64()
+            .ok_or(D::Error::custom("Invalid mts value"))?
             .round() as u64;
 
-        let response_type = OrderResponseKind::deserialize(value.get(1)
-            .ok_or(D::Error::custom("Missing response type"))?).map_err(D::Error::custom)?;
+        let response_type = OrderResponseKind::deserialize(
+            value
+                .get(1)
+                .ok_or(D::Error::custom("Missing response type"))?,
+        )
+        .map_err(D::Error::custom)?;
 
-        let message_id = Option::deserialize(value.get(2).ok_or(D::Error::custom("Missing message_id"))?)
-            .map_err(D::Error::custom)?;
+        let message_id =
+            Option::deserialize(value.get(2).ok_or(D::Error::custom("Missing message_id"))?)
+                .map_err(D::Error::custom)?;
 
-
-        let id = middle_list_iter.next()
+        let id = middle_list_iter
+            .next()
             .ok_or(D::Error::custom("Missing order id"))?
-            .as_u64().ok_or(D::Error::custom("Invalid order id type"))?;
+            .as_u64()
+            .ok_or(D::Error::custom("Invalid order id type"))?;
 
-        let gid = Option::deserialize(middle_list_iter.next()
-            .ok_or(D::Error::custom("Missing order id"))?).map_err(D::Error::custom)?;
+        let gid = Option::deserialize(
+            middle_list_iter
+                .next()
+                .ok_or(D::Error::custom("Missing order id"))?,
+        )
+        .map_err(D::Error::custom)?;
 
-        let cid = middle_list_iter.next()
+        let cid = middle_list_iter
+            .next()
             .ok_or(D::Error::custom("Missing client id"))?
-            .as_u64().ok_or(D::Error::custom("Invalid client id type"))?;
+            .as_u64()
+            .ok_or(D::Error::custom("Invalid client id type"))?;
 
-        let symbol = String::deserialize(middle_list_iter.next()
-            .ok_or(D::Error::custom("Missing symbol"))?).map_err(D::Error::custom)?;
+        let symbol = String::deserialize(
+            middle_list_iter
+                .next()
+                .ok_or(D::Error::custom("Missing symbol"))?,
+        )
+        .map_err(D::Error::custom)?;
 
-        let mts_create = middle_list_iter.next()
+        let mts_create = middle_list_iter
+            .next()
             .ok_or(D::Error::custom("Missing mts create"))?
-            .as_u64().ok_or(D::Error::custom("Invalid mts create type"))?;
+            .as_u64()
+            .ok_or(D::Error::custom("Invalid mts create type"))?;
 
-        let mts_update = middle_list_iter.next()
+        let mts_update = middle_list_iter
+            .next()
             .ok_or(D::Error::custom("Missing mts update"))?
-            .as_u64().ok_or(D::Error::custom("Invalid mts update type"))?;
+            .as_u64()
+            .ok_or(D::Error::custom("Invalid mts update type"))?;
 
-        let amount = middle_list_iter.next()
+        let amount = middle_list_iter
+            .next()
             .ok_or(D::Error::custom("Missing amount"))?
-            .as_f64().ok_or(D::Error::custom("Invalid amount type"))?;
+            .as_f64()
+            .ok_or(D::Error::custom("Invalid amount type"))?;
 
-        let amount_orig = middle_list_iter.next()
+        let amount_orig = middle_list_iter
+            .next()
             .ok_or(D::Error::custom("Missing amount orig"))?
-            .as_f64().ok_or(D::Error::custom("Invalid amount orig type"))?;
+            .as_f64()
+            .ok_or(D::Error::custom("Invalid amount orig type"))?;
 
-        let order_type = OrderKind::deserialize(middle_list_iter.next()
-            .ok_or(D::Error::custom("Missing order type"))?).map_err(D::Error::custom)?;
+        let order_type = OrderKind::deserialize(
+            middle_list_iter
+                .next()
+                .ok_or(D::Error::custom("Missing order type"))?,
+        )
+        .map_err(D::Error::custom)?;
 
-        let prev_order_type = Option::deserialize(middle_list_iter.next()
-            .ok_or(D::Error::custom("Missing prev order type"))?).map_err(D::Error::custom)?;
+        let prev_order_type = Option::deserialize(
+            middle_list_iter
+                .next()
+                .ok_or(D::Error::custom("Missing prev order type"))?,
+        )
+        .map_err(D::Error::custom)?;
 
-        let mts_tif = Option::deserialize(middle_list_iter.next()
-            .ok_or(D::Error::custom("Missing mts_tif"))?).map_err(D::Error::custom)?;
+        let mts_tif = Option::deserialize(
+            middle_list_iter
+                .next()
+                .ok_or(D::Error::custom("Missing mts_tif"))?,
+        )
+        .map_err(D::Error::custom)?;
 
         // skip placeholder
-        middle_list_iter.next().ok_or(D::Error::custom("Missing placeholder"))?;
+        middle_list_iter
+            .next()
+            .ok_or(D::Error::custom("Missing placeholder"))?;
 
-        let flags = OrderFlags::from_bits(middle_list_iter.next()
-            .ok_or(D::Error::custom("Missing order flags"))?.as_u64().ok_or(D::Error::custom("Invalid order flags type"))? as u32)
-            .ok_or(D::Error::custom("Invalid order flags"))?;
+        let flags = OrderFlags::from_bits(
+            middle_list_iter
+                .next()
+                .ok_or(D::Error::custom("Missing order flags"))?
+                .as_u64()
+                .ok_or(D::Error::custom("Invalid order flags type"))? as u32,
+        )
+        .ok_or(D::Error::custom("Invalid order flags"))?;
 
-        let order_status = String::deserialize(middle_list_iter.next()
-            .ok_or(D::Error::custom("Missing order type"))?).map_err(D::Error::custom)?;
+        let order_status = String::deserialize(
+            middle_list_iter
+                .next()
+                .ok_or(D::Error::custom("Missing order type"))?,
+        )
+        .map_err(D::Error::custom)?;
 
         // skip placeholders
-        middle_list_iter.next().ok_or(D::Error::custom("Missing placeholder"))?;
-        middle_list_iter.next().ok_or(D::Error::custom("Missing placeholder"))?;
+        middle_list_iter
+            .next()
+            .ok_or(D::Error::custom("Missing placeholder"))?;
+        middle_list_iter
+            .next()
+            .ok_or(D::Error::custom("Missing placeholder"))?;
 
-        let price = middle_list_iter.next()
+        let price = middle_list_iter
+            .next()
             .ok_or(D::Error::custom("Missing price"))?
-            .as_f64().ok_or(D::Error::custom("Invalid price type"))?;
+            .as_f64()
+            .ok_or(D::Error::custom("Invalid price type"))?;
 
-        let price_avg = middle_list_iter.next()
+        let price_avg = middle_list_iter
+            .next()
             .ok_or(D::Error::custom("Missing price average"))?
-            .as_f64().ok_or(D::Error::custom("Invalid price average type"))?;
+            .as_f64()
+            .ok_or(D::Error::custom("Invalid price average type"))?;
 
-        let price_trailing = middle_list_iter.next()
+        let price_trailing = middle_list_iter
+            .next()
             .ok_or(D::Error::custom("Missing price trailing "))?
-            .as_f64().ok_or(D::Error::custom("Invalid price trailing type"))?;
+            .as_f64()
+            .ok_or(D::Error::custom("Invalid price trailing type"))?;
 
-        let price_aux_limit = middle_list_iter.next()
+        let price_aux_limit = middle_list_iter
+            .next()
             .ok_or(D::Error::custom("Missing price aux limit"))?
-            .as_f64().ok_or(D::Error::custom("Invalid price aux limit type"))?;
+            .as_f64()
+            .ok_or(D::Error::custom("Invalid price aux limit type"))?;
 
         // skip placeholders
-        middle_list_iter.next().ok_or(D::Error::custom("Missing placeholder"))?;
-        middle_list_iter.next().ok_or(D::Error::custom("Missing placeholder"))?;
-        middle_list_iter.next().ok_or(D::Error::custom("Missing placeholder"))?;
+        middle_list_iter
+            .next()
+            .ok_or(D::Error::custom("Missing placeholder"))?;
+        middle_list_iter
+            .next()
+            .ok_or(D::Error::custom("Missing placeholder"))?;
+        middle_list_iter
+            .next()
+            .ok_or(D::Error::custom("Missing placeholder"))?;
 
-        let hidden = middle_list_iter.next()
+        let hidden = middle_list_iter
+            .next()
             .ok_or(D::Error::custom("Missing hidden"))?
-            .as_u64().ok_or(D::Error::custom("Invalid hidden type"))? > 0;
+            .as_u64()
+            .ok_or(D::Error::custom("Invalid hidden type"))?
+            > 0;
 
-        let placed_id = Option::deserialize(middle_list_iter.next()
-            .ok_or(D::Error::custom("Missing placed_id"))?).map_err(D::Error::custom)?;
+        let placed_id = Option::deserialize(
+            middle_list_iter
+                .next()
+                .ok_or(D::Error::custom("Missing placed_id"))?,
+        )
+        .map_err(D::Error::custom)?;
 
         // skip placeholders
-        middle_list_iter.next().ok_or(D::Error::custom("Missing placeholder"))?;
-        middle_list_iter.next().ok_or(D::Error::custom("Missing placeholder"))?;
-        middle_list_iter.next().ok_or(D::Error::custom("Missing placeholder"))?;
+        middle_list_iter
+            .next()
+            .ok_or(D::Error::custom("Missing placeholder"))?;
+        middle_list_iter
+            .next()
+            .ok_or(D::Error::custom("Missing placeholder"))?;
+        middle_list_iter
+            .next()
+            .ok_or(D::Error::custom("Missing placeholder"))?;
 
-        let routing = String::deserialize(middle_list_iter.next()
-            .ok_or(D::Error::custom("Missing routing"))?).map_err(D::Error::custom)?;
+        let routing = String::deserialize(
+            middle_list_iter
+                .next()
+                .ok_or(D::Error::custom("Missing routing"))?,
+        )
+        .map_err(D::Error::custom)?;
 
         // skip placeholder
-        middle_list_iter.next().ok_or(D::Error::custom("Missing placeholder"))?;
+        middle_list_iter
+            .next()
+            .ok_or(D::Error::custom("Missing placeholder"))?;
 
         // TODO: define specialized struct
-        let meta = Option::deserialize(middle_list_iter.next()
-            .ok_or(D::Error::custom("Missing meta"))?).map_err(D::Error::custom)?;
+        let meta = Option::deserialize(
+            middle_list_iter
+                .next()
+                .ok_or(D::Error::custom("Missing meta"))?,
+        )
+        .map_err(D::Error::custom)?;
 
-        let status = String::deserialize(value.get(6)
-            .ok_or(D::Error::custom("Missing status"))?).map_err(D::Error::custom)?;
+        let status = String::deserialize(value.get(6).ok_or(D::Error::custom("Missing status"))?)
+            .map_err(D::Error::custom)?;
 
-        let text = String::deserialize(value.get(7)
-            .ok_or(D::Error::custom("Missing text"))?).map_err(D::Error::custom)?;
+        let text = String::deserialize(value.get(7).ok_or(D::Error::custom("Missing text"))?)
+            .map_err(D::Error::custom)?;
 
         Ok(Self {
             mts,
@@ -413,7 +512,7 @@ pub enum OrderKind {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct OrderMeta {
-    aff_code: String
+    aff_code: String,
 }
 
 impl OrderMeta {
@@ -523,7 +622,7 @@ impl OrderForm {
                 self.price_trailing = Some(trailing.to_string());
                 Ok(self)
             }
-            _ => Err("Invalid order type.".into())
+            _ => Err("Invalid order type.".into()),
         }
     }
 
@@ -533,30 +632,30 @@ impl OrderForm {
                 self.price_aux_limit = Some(limit.to_string());
                 Ok(self)
             }
-            _ => Err("Invalid order type.".into())
+            _ => Err("Invalid order type.".into()),
         }
     }
 
     pub fn with_price_oco_stop(mut self, oco_stop: f64) -> Result<Self, BoxError> {
         match self.flags {
             None => Err("No flags set.".into()),
-            Some(flags) => {
-                match OrderFlags::from_bits(flags) {
-                    Some(flags) => {
-                        if flags.contains(OrderFlags::OCO) {
-                            self.price_oco_stop = Some(oco_stop.to_string());
-                            return Ok(self);
-                        }
-                        return Err("OCO flag not set.".into());
+            Some(flags) => match OrderFlags::from_bits(flags) {
+                Some(flags) => {
+                    if flags.contains(OrderFlags::OCO) {
+                        self.price_oco_stop = Some(oco_stop.to_string());
+                        return Ok(self);
                     }
-                    None => Err("OCO flag not set.".into())
+                    return Err("OCO flag not set.".into());
                 }
-            }
+                None => Err("OCO flag not set.".into()),
+            },
         }
     }
 
     pub fn with_tif<T: TimeZone>(mut self, tif: DateTime<T>) -> Self
-        where T::Offset: Display {
+    where
+        T::Offset: Display,
+    {
         self.tif = Some(tif.format("%Y-%m-%d %H:%M:%S").to_string());
         self
     }
@@ -580,24 +679,37 @@ impl CancelOrderForm {
     pub fn new<Tz: TimeZone>(id: u64, client_id: u64, client_id_date: DateTime<Tz>) -> Self {
         let naive_date = client_id_date.naive_utc().date();
 
-        CancelOrderForm { id, client_id, client_id_date: CancelOrderDateTime { date: naive_date } }
+        CancelOrderForm {
+            id,
+            client_id,
+            client_id_date: CancelOrderDateTime { date: naive_date },
+        }
     }
 }
 
 struct CancelOrderDateTime {
-    date: NaiveDate
+    date: NaiveDate,
 }
 
 impl Serialize for CancelOrderDateTime {
-    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error> where
-        S: Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<<S as Serializer>::Ok, <S as Serializer>::Error>
+    where
+        S: Serializer,
+    {
         serializer.serialize_str(&self.date.format("%Y-%m-%d").to_string())
     }
 }
 
 impl From<ActiveOrder> for CancelOrderForm {
     fn from(o: ActiveOrder) -> Self {
-        Self::new::<Utc>(o.id, o.client_id, DateTime::from_utc(NaiveDateTime::from_timestamp(o.update_timestamp as i64, 0), Utc))
+        Self::new::<Utc>(
+            o.id,
+            o.client_id,
+            DateTime::from_utc(
+                NaiveDateTime::from_timestamp(o.update_timestamp as i64, 0),
+                Utc,
+            ),
+        )
     }
 }
 
@@ -620,28 +732,40 @@ impl Orders {
         Ok(from_str(&data)?)
     }
 
-    pub async fn history<S: ToString>(&self, symbol: Option<S>) -> Result<Vec<ActiveOrder>, BoxError>
-    {
+    pub async fn history<S: ToString>(
+        &self,
+        symbol: Option<S>,
+    ) -> Result<Vec<ActiveOrder>, BoxError> {
         let endpoint = match symbol {
-            Some(symbol) => AuthenticatedEndpoint::OrdersHistory { symbol: Some(symbol.to_string()) },
-            None => AuthenticatedEndpoint::OrdersHistory { symbol: None }
+            Some(symbol) => AuthenticatedEndpoint::OrdersHistory {
+                symbol: Some(symbol.to_string()),
+            },
+            None => AuthenticatedEndpoint::OrdersHistory { symbol: None },
         };
         let data = self.client.post_signed(&endpoint, "{}".into()).await?;
 
         Ok(from_str(&data)?)
     }
 
-
     pub async fn submit_order(&self, order: &OrderForm) -> Result<OrderResponse, BoxError> {
         let endpoint = AuthenticatedEndpoint::SubmitOrder;
-        let data = self.client.post_signed(&endpoint, serde_json::to_string(order)?).await?;
+        let data = self
+            .client
+            .post_signed(&endpoint, serde_json::to_string(order)?)
+            .await?;
 
         Ok(from_str(&data)?)
     }
 
-    pub async fn cancel_order(&self, order_form: &CancelOrderForm) -> Result<OrderResponse, BoxError> {
+    pub async fn cancel_order(
+        &self,
+        order_form: &CancelOrderForm,
+    ) -> Result<OrderResponse, BoxError> {
         let endpoint = AuthenticatedEndpoint::CancelOrder;
-        let data = self.client.post_signed(&endpoint, serde_json::to_string(order_form)?).await?;
+        let data = self
+            .client
+            .post_signed(&endpoint, serde_json::to_string(order_form)?)
+            .await?;
 
         Ok(from_str(&data)?)
     }

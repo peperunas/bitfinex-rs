@@ -3,9 +3,9 @@ use crate::book::Book;
 use crate::candles::Candles;
 use crate::ledger::Ledger;
 use crate::orders::Orders;
+use crate::positions::Positions;
 use crate::ticker::Ticker;
 use crate::trades::Trades;
-use crate::positions::Positions;
 
 #[derive(Clone)]
 pub struct Bitfinex {
@@ -16,7 +16,7 @@ pub struct Bitfinex {
     pub orders: Orders,
     pub account: Account,
     pub ledger: Ledger,
-    pub positions: Positions
+    pub positions: Positions,
 }
 
 impl Bitfinex {
@@ -29,7 +29,7 @@ impl Bitfinex {
             orders: Orders::new(api_key.clone(), secret_key.clone()),
             account: Account::new(api_key.clone(), secret_key.clone()),
             ledger: Ledger::new(api_key.clone(), secret_key.clone()),
-            positions: Positions::new(api_key.clone(), secret_key.clone())
+            positions: Positions::new(api_key.clone(), secret_key.clone()),
         }
     }
 }

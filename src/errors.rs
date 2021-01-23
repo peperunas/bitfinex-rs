@@ -1,8 +1,9 @@
 use std;
+
 use reqwest;
-use url;
 use serde_json;
 use tungstenite;
+use url;
 
 pub(crate) type BoxError = Box<dyn std::error::Error + Send + Sync>;
 
@@ -11,7 +12,7 @@ error_chain! {
         Error, ErrorKind, ResultExt, Result;
     }
 
-    errors {         
+    errors {
         Internal(t: String) {
             description("invalid toolchain name")
             display("invalid toolchain name: '{}'", t)
@@ -30,5 +31,3 @@ error_chain! {
     }
 
 }
-
-

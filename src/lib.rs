@@ -1,9 +1,10 @@
 #![deny(
-unstable_features,
-unused_must_use,
-unused_mut,
-unused_imports,
-unused_import_braces)]
+    unstable_features,
+    unused_must_use,
+    unused_mut,
+    unused_imports,
+    unused_import_braces
+)]
 
 #[macro_use]
 extern crate bitflags;
@@ -20,22 +21,21 @@ extern crate serde_json;
 extern crate tungstenite;
 extern crate url;
 
-mod client;
-mod trades;
 mod account;
-mod ledger;
 mod auth;
+mod client;
 mod endpoints;
+mod ledger;
+mod trades;
 
-pub mod candles;
 pub mod api;
-pub mod pairs;
+pub mod book;
+pub mod candles;
 pub mod currency;
-pub mod websockets;
-pub mod events;
 pub mod errors;
+pub mod events;
+pub mod orders;
+pub mod pairs;
 pub mod positions;
 pub mod ticker;
-pub mod orders;
-pub mod book;
-
+pub mod websockets;

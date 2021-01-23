@@ -23,12 +23,12 @@ pub enum BookPrecision {
 impl ToString for BookPrecision {
     fn to_string(&self) -> String {
         match self {
-            BookPrecision::P0 => { "P0".into() }
-            BookPrecision::P1 => { "P1".into() }
-            BookPrecision::P2 => { "P2".into() }
-            BookPrecision::P3 => { "P3".into() }
-            BookPrecision::P4 => { "P4".into() }
-            BookPrecision::R0 => { "R0".into() }
+            BookPrecision::P0 => "P0".into(),
+            BookPrecision::P1 => "P1".into(),
+            BookPrecision::P2 => "P2".into(),
+            BookPrecision::P3 => "P3".into(),
+            BookPrecision::P4 => "P4".into(),
+            BookPrecision::R0 => "R0".into(),
         }
     }
 }
@@ -63,22 +63,40 @@ pub struct RawBook {
 
 impl Book {
     pub fn new() -> Self {
-        Book { client: Client::new(None, None) }
+        Book {
+            client: Client::new(None, None),
+        }
     }
 
-    pub async fn funding_currency<S>(&self, symbol: S, precision: BookPrecision) -> Result<Vec<FundingCurrency>, BoxError>
-        where S: Into<String>
+    pub async fn funding_currency<S>(
+        &self,
+        symbol: S,
+        precision: BookPrecision,
+    ) -> Result<Vec<FundingCurrency>, BoxError>
+    where
+        S: Into<String>,
     {
-        let endpoint = PublicEndpoint::Book { symbol: format!("f{}", symbol.into()), precision };
+        let endpoint = PublicEndpoint::Book {
+            symbol: format!("f{}", symbol.into()),
+            precision,
+        };
         let data = self.client.get(endpoint).await?;
 
         Ok(from_str(data.as_str())?)
     }
 
-    pub async fn trading_pair<S>(&self, symbol: S, precision: BookPrecision) -> Result<Vec<TradingPair>, BoxError>
-        where S: Into<String>
+    pub async fn trading_pair<S>(
+        &self,
+        symbol: S,
+        precision: BookPrecision,
+    ) -> Result<Vec<TradingPair>, BoxError>
+    where
+        S: Into<String>,
     {
-        let endpoint = PublicEndpoint::Book { symbol: format!("t{}", symbol.into()), precision };
+        let endpoint = PublicEndpoint::Book {
+            symbol: format!("t{}", symbol.into()),
+            precision,
+        };
         let data = self.client.get(endpoint).await?;
 
         Ok(from_str(data.as_str())?)

@@ -1,6 +1,8 @@
+use std::time::{SystemTime, UNIX_EPOCH};
+
 use hex::encode;
 use ring::hmac;
-use std::time::{SystemTime, UNIX_EPOCH};
+
 use crate::errors::BoxError;
 
 pub fn sign_payload(secret: &[u8], payload: &[u8]) -> Result<String, BoxError> {

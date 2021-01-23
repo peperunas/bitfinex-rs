@@ -1,7 +1,7 @@
 use serde_json::from_str;
 
 use crate::client::Client;
-use crate::endpoints::{PublicEndpoint, AuthenticatedEndpoint};
+use crate::endpoints::{AuthenticatedEndpoint, PublicEndpoint};
 use crate::errors::BoxError;
 
 #[derive(Serialize, Deserialize)]
@@ -49,34 +49,47 @@ impl Trades {
     }
 
     pub async fn funding_currency<S>(&self, symbol: S) -> Result<Vec<FundingCurrency>, BoxError>
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
-        let endpoint = PublicEndpoint::Trades { symbol: format!("f{}", symbol.into()) };
+        let endpoint = PublicEndpoint::Trades {
+            symbol: format!("f{}", symbol.into()),
+        };
         let data = self.client.get(endpoint).await?;
 
         Ok(from_str(data.as_str())?)
     }
 
     pub async fn trading_pair<S>(&self, symbol: S) -> Result<Vec<TradingPair>, BoxError>
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
-        let endpoint = PublicEndpoint::Trades { symbol: format!("t{}", symbol.into()) };
+        let endpoint = PublicEndpoint::Trades {
+            symbol: format!("t{}", symbol.into()),
+        };
         let data = self.client.get(endpoint).await?;
 
         Ok(from_str(data.as_str())?)
     }
 
-    pub async fn history<S: ToString>(&self, symbol: S) -> Result<Vec<Trade>, BoxError>
-    {
-        let endpoint = AuthenticatedEndpoint::OrdersHistory {symbol: Some(symbol.to_string())};
+    pub async fn history<S: ToString>(&self, symbol: S) -> Result<Vec<Trade>, BoxError> {
+        let endpoint = AuthenticatedEndpoint::OrdersHistory {
+            symbol: Some(symbol.to_string()),
+        };
         let data = self.client.post_signed(&endpoint, "{}".into()).await?;
 
         Ok(from_str(&data)?)
     }
 
-    pub async fn generated_by_order<S: ToString>(&self, symbol: S, order_id: u64) -> Result<Vec<Trade>, BoxError>
-    {
-        let endpoint = AuthenticatedEndpoint::OrderTrades {symbol: symbol.to_string(), order_id};
+    pub async fn generated_by_order<S: ToString>(
+        &self,
+        symbol: S,
+        order_id: u64,
+    ) -> Result<Vec<Trade>, BoxError> {
+        let endpoint = AuthenticatedEndpoint::OrderTrades {
+            symbol: symbol.to_string(),
+            order_id,
+        };
         let data = self.client.post_signed(&endpoint, "{}".into()).await?;
 
         Ok(from_str(&data)?)

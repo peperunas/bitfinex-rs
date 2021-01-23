@@ -1,11 +1,11 @@
 use reqwest;
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE, USER_AGENT};
 use reqwest::{Response, StatusCode};
-use reqwest::header::{CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue, USER_AGENT};
 use serde::Serialize;
 
 use crate::auth;
+use crate::endpoints::{AuthenticatedEndpoint, PublicEndpoint};
 use crate::errors::BoxError;
-use crate::endpoints::{PublicEndpoint, AuthenticatedEndpoint};
 
 static NO_PARAMS: &'static [(); 0] = &[];
 
@@ -29,7 +29,11 @@ impl Client {
         self.handler(response).await
     }
 
-    pub async fn post_signed(&self, endpoint: &AuthenticatedEndpoint, payload: String) -> Result<String, BoxError> {
+    pub async fn post_signed(
+        &self,
+        endpoint: &AuthenticatedEndpoint,
+        payload: String,
+    ) -> Result<String, BoxError> {
         self.post_signed_params(endpoint, payload, NO_PARAMS).await
     }
 
@@ -52,9 +56,17 @@ impl Client {
         self.handler(response).await
     }
 
-    fn build_headers(&self, endpoint: &AuthenticatedEndpoint, payload: String) -> Result<HeaderMap, BoxError> {
+    fn build_headers(
+        &self,
+        endpoint: &AuthenticatedEndpoint,
+        payload: String,
+    ) -> Result<HeaderMap, BoxError> {
         let nonce: String = auth::generate_nonce()?;
-        let path = endpoint.to_string().strip_prefix(AuthenticatedEndpoint::HOST).ok_or("Invalid endpoint")?.to_owned();
+        let path = endpoint
+            .to_string()
+            .strip_prefix(AuthenticatedEndpoint::HOST)
+            .ok_or("Invalid endpoint")?
+            .to_owned();
         let signature_path = format!("/api{}{}{}", path, nonce, payload);
 
         let signature = auth::sign_payload(self.secret_key.as_bytes(), signature_path.as_bytes())?;
@@ -86,7 +98,7 @@ impl Client {
                 return Ok(body);
             }
             StatusCode::INTERNAL_SERVER_ERROR => {
-                bail!("Internal Server Error: {}",  response.text().await?);
+                bail!("Internal Server Error: {}", response.text().await?);
             }
             StatusCode::SERVICE_UNAVAILABLE => {
                 bail!("Service Unavailable: {}", response.text().await?);
@@ -98,7 +110,11 @@ impl Client {
                 bail!(format!("Bad Request: {}", response.text().await?));
             }
             s => {
-                bail!(format!("Received response {}: {}", s, response.text().await?));
+                bail!(format!(
+                    "Received response {}: {}",
+                    s,
+                    response.text().await?
+                ));
             }
         };
     }

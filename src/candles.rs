@@ -33,17 +33,17 @@ pub enum CandlesTimeFrame {
 impl ToString for CandlesTimeFrame {
     fn to_string(&self) -> String {
         match self {
-            CandlesTimeFrame::OneMinute => { "1m".into() }
-            CandlesTimeFrame::FiveMinutes => { "5m".into() }
-            CandlesTimeFrame::FifteenMinutes => { "15m".into() }
-            CandlesTimeFrame::ThirtyMinutes => { "30m".into() }
-            CandlesTimeFrame::OneHour => { "1h".into() }
-            CandlesTimeFrame::ThreeHours => { "3h".into() }
-            CandlesTimeFrame::SixHours => { "6h".into() }
-            CandlesTimeFrame::TwelveHours => { "12h".into() }
-            CandlesTimeFrame::OneDay => { "1D".into() }
-            CandlesTimeFrame::OneWeek => { "7D".into() }
-            CandlesTimeFrame::TwoWeeks => { "14D".into() }
+            CandlesTimeFrame::OneMinute => "1m".into(),
+            CandlesTimeFrame::FiveMinutes => "5m".into(),
+            CandlesTimeFrame::FifteenMinutes => "15m".into(),
+            CandlesTimeFrame::ThirtyMinutes => "30m".into(),
+            CandlesTimeFrame::OneHour => "1h".into(),
+            CandlesTimeFrame::ThreeHours => "3h".into(),
+            CandlesTimeFrame::SixHours => "6h".into(),
+            CandlesTimeFrame::TwelveHours => "12h".into(),
+            CandlesTimeFrame::OneDay => "1D".into(),
+            CandlesTimeFrame::OneWeek => "7D".into(),
+            CandlesTimeFrame::TwoWeeks => "14D".into(),
         }
     }
 }
@@ -59,8 +59,8 @@ pub enum CandlesSection {
 impl ToString for CandlesSection {
     fn to_string(&self) -> String {
         match self {
-            CandlesSection::Last => { "last".into() }
-            CandlesSection::Hist => { "hist".into() }
+            CandlesSection::Last => "last".into(),
+            CandlesSection::Hist => "hist".into(),
         }
     }
 }
@@ -91,19 +91,18 @@ impl CandleHistoryParams {
     }
 
     pub fn to_query(&self) -> String {
-        format!("{}={}&{}={}&{}={}&{}={}",
-                "limit", self.limit
-                    .map(|a| a.to_string())
-                    .unwrap_or("".into()),
-                "start", self.start
-                    .map(|a| a.to_string())
-                    .unwrap_or("".into()),
-                "end", self.end
-                    .map(|a| a.to_string())
-                    .unwrap_or("".into()),
-                "sort", self.sort
-                    .map(|a| if a { "1" } else { "0" })
-                    .unwrap_or("".into()),
+        format!(
+            "{}={}&{}={}&{}={}&{}={}",
+            "limit",
+            self.limit.map(|a| a.to_string()).unwrap_or("".into()),
+            "start",
+            self.start.map(|a| a.to_string()).unwrap_or("".into()),
+            "end",
+            self.end.map(|a| a.to_string()).unwrap_or("".into()),
+            "sort",
+            self.sort
+                .map(|a| if a { "1" } else { "0" })
+                .unwrap_or("".into()),
         )
     }
 }
@@ -132,9 +131,15 @@ impl Candles {
     }
 
     pub async fn last<S>(&self, symbol: S, timeframe: CandlesTimeFrame) -> Result<Candle, BoxError>
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
-        let endpoint = PublicEndpoint::Candles { symbol: symbol.into(), timeframe, section: CandlesSection::Last, funding_period: None };
+        let endpoint = PublicEndpoint::Candles {
+            symbol: symbol.into(),
+            timeframe,
+            section: CandlesSection::Last,
+            funding_period: None,
+        };
         let data = self.client.get(endpoint).await?;
 
         Ok(from_str(data.as_str())?)
@@ -145,9 +150,15 @@ impl Candles {
         symbol: S,
         timeframe: CandlesTimeFrame,
     ) -> Result<Vec<Candle>, BoxError>
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
-        let endpoint = PublicEndpoint::Candles { symbol: symbol.into(), timeframe, section: CandlesSection::Hist, funding_period: None };
+        let endpoint = PublicEndpoint::Candles {
+            symbol: symbol.into(),
+            timeframe,
+            section: CandlesSection::Hist,
+            funding_period: None,
+        };
         let data = self.client.get(endpoint).await?;
 
         Ok(from_str(data.as_str())?)

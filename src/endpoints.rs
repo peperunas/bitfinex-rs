@@ -4,12 +4,28 @@ use crate::candles::{CandlesSection, CandlesTimeFrame};
 // TODO: incomplete
 pub enum PublicEndpoint {
     Status,
-    Tickers { symbols: Vec<String> },
-    Ticker { symbol: String },
-    TickersHistory { symbols: Vec<String> },
-    Trades { symbol: String },
-    Book { symbol: String, precision: BookPrecision },
-    Candles { timeframe: CandlesTimeFrame, symbol: String, section: CandlesSection, funding_period: Option<String> },
+    Tickers {
+        symbols: Vec<String>,
+    },
+    Ticker {
+        symbol: String,
+    },
+    TickersHistory {
+        symbols: Vec<String>,
+    },
+    Trades {
+        symbol: String,
+    },
+    Book {
+        symbol: String,
+        precision: BookPrecision,
+    },
+    Candles {
+        timeframe: CandlesTimeFrame,
+        symbol: String,
+        section: CandlesSection,
+        funding_period: Option<String>,
+    },
 }
 
 impl PublicEndpoint {
@@ -22,25 +38,45 @@ impl ToString for PublicEndpoint {
         let mut endpoint = format!("{}{}", PublicEndpoint::HOST, PublicEndpoint::PATH);
 
         match self {
-            PublicEndpoint::Status => { endpoint.push_str("/platform/status") }
+            PublicEndpoint::Status => endpoint.push_str("/platform/status"),
             PublicEndpoint::Tickers { symbols } => {
                 let joined_syms = symbols.join(",");
                 endpoint.push_str(&*format!("/tickers?symbols={}", joined_syms));
             }
-            PublicEndpoint::Ticker { symbol } => { endpoint.push_str(&format!("/ticker/{}", symbol)) }
+            PublicEndpoint::Ticker { symbol } => endpoint.push_str(&format!("/ticker/{}", symbol)),
             PublicEndpoint::TickersHistory { symbols } => {
                 let joined_syms = symbols.join(",");
                 endpoint.push_str(&*format!("/tickers/hist?symbols={}", joined_syms));
             }
-            PublicEndpoint::Trades { symbol } => { endpoint.push_str(&format!("/ticker/{}/hist", symbol)) }
-            PublicEndpoint::Book { symbol, precision } => { endpoint.push_str(&format!("/book/{}/{}", symbol, precision.to_string())) }
-            PublicEndpoint::Candles { symbol, funding_period, section, timeframe } => {
+            PublicEndpoint::Trades { symbol } => {
+                endpoint.push_str(&format!("/ticker/{}/hist", symbol))
+            }
+            PublicEndpoint::Book { symbol, precision } => {
+                endpoint.push_str(&format!("/book/{}/{}", symbol, precision.to_string()))
+            }
+            PublicEndpoint::Candles {
+                symbol,
+                funding_period,
+                section,
+                timeframe,
+            } => {
                 let query = match funding_period {
                     Some(period) => {
-                        format!("/candles/trade:{}:{}:{}/{}", timeframe.to_string(), symbol.to_string(), period.to_string(), section.to_string())
+                        format!(
+                            "/candles/trade:{}:{}:{}/{}",
+                            timeframe.to_string(),
+                            symbol.to_string(),
+                            period.to_string(),
+                            section.to_string()
+                        )
                     }
                     None => {
-                        format!("/candles/trade:{}:{}/{}", timeframe.to_string(), symbol.to_string(), section.to_string())
+                        format!(
+                            "/candles/trade:{}:{}/{}",
+                            timeframe.to_string(),
+                            symbol.to_string(),
+                            section.to_string()
+                        )
                     }
                 };
 
@@ -88,33 +124,96 @@ impl ToString for AuthenticatedEndpoint {
         let mut endpoint = String::from(AuthenticatedEndpoint::HOST);
 
         match self {
-            AuthenticatedEndpoint::Wallets => { endpoint.push_str(&format!("{}/wallets", AuthenticatedEndpoint::READ_PATH)) }
-            AuthenticatedEndpoint::RetrieveOrders => { endpoint.push_str(&format!("{}/orders", AuthenticatedEndpoint::READ_PATH)) }
-            AuthenticatedEndpoint::SubmitOrder => { endpoint.push_str(&format!("{}/order/submit", AuthenticatedEndpoint::WRITE_PATH)) }
-            AuthenticatedEndpoint::UpdateOrder => { endpoint.push_str(&format!("{}/order/update", AuthenticatedEndpoint::WRITE_PATH)) }
-            AuthenticatedEndpoint::CancelOrder => { endpoint.push_str(&format!("{}/order/cancel", AuthenticatedEndpoint::WRITE_PATH)) }
-            AuthenticatedEndpoint::OrdersHistory { symbol } => {
-                endpoint.push_str(match symbol {
-                    Some(symbol) => { format!("{}/order/{}/hist", AuthenticatedEndpoint::READ_PATH, symbol) }
+            AuthenticatedEndpoint::Wallets => {
+                endpoint.push_str(&format!("{}/wallets", AuthenticatedEndpoint::READ_PATH))
+            }
+            AuthenticatedEndpoint::RetrieveOrders => {
+                endpoint.push_str(&format!("{}/orders", AuthenticatedEndpoint::READ_PATH))
+            }
+            AuthenticatedEndpoint::SubmitOrder => endpoint.push_str(&format!(
+                "{}/order/submit",
+                AuthenticatedEndpoint::WRITE_PATH
+            )),
+            AuthenticatedEndpoint::UpdateOrder => endpoint.push_str(&format!(
+                "{}/order/update",
+                AuthenticatedEndpoint::WRITE_PATH
+            )),
+            AuthenticatedEndpoint::CancelOrder => endpoint.push_str(&format!(
+                "{}/order/cancel",
+                AuthenticatedEndpoint::WRITE_PATH
+            )),
+            AuthenticatedEndpoint::OrdersHistory { symbol } => endpoint.push_str(
+                match symbol {
+                    Some(symbol) => {
+                        format!("{}/order/{}/hist", AuthenticatedEndpoint::READ_PATH, symbol)
+                    }
                     None => {
                         format!("{}/order/hist", AuthenticatedEndpoint::READ_PATH)
                     }
-                }.as_str())
+                }
+                .as_str(),
+            ),
+            AuthenticatedEndpoint::OrderTrades { symbol, order_id } => endpoint.push_str(&format!(
+                "{}/order/{}:{}/trades",
+                AuthenticatedEndpoint::READ_PATH,
+                symbol,
+                order_id
+            )),
+            AuthenticatedEndpoint::Trades { symbol } => endpoint.push_str(&format!(
+                "{}/trades/{}/hist",
+                AuthenticatedEndpoint::READ_PATH,
+                symbol
+            )),
+            AuthenticatedEndpoint::Ledgers { symbol } => endpoint.push_str(&format!(
+                "{}/ledgers/{}/hist",
+                AuthenticatedEndpoint::READ_PATH,
+                symbol
+            )),
+            AuthenticatedEndpoint::MarginInfo { key } => endpoint.push_str(&format!(
+                "{}/info/margin/{}",
+                AuthenticatedEndpoint::READ_PATH,
+                key.to_string()
+            )),
+            AuthenticatedEndpoint::RetrievePositions => {
+                endpoint.push_str(&format!("{}/positions", AuthenticatedEndpoint::READ_PATH))
             }
-            AuthenticatedEndpoint::OrderTrades { symbol, order_id } => { endpoint.push_str(&format!("{}/order/{}:{}/trades", AuthenticatedEndpoint::READ_PATH, symbol, order_id)) }
-            AuthenticatedEndpoint::Trades { symbol } => { endpoint.push_str(&format!("{}/trades/{}/hist", AuthenticatedEndpoint::READ_PATH, symbol)) }
-            AuthenticatedEndpoint::Ledgers { symbol } => { endpoint.push_str(&format!("{}/ledgers/{}/hist", AuthenticatedEndpoint::READ_PATH, symbol)) }
-            AuthenticatedEndpoint::MarginInfo { key } => { endpoint.push_str(&format!("{}/info/margin/{}", AuthenticatedEndpoint::READ_PATH, key.to_string())) }
-            AuthenticatedEndpoint::RetrievePositions => { endpoint.push_str(&format!("{}/positions", AuthenticatedEndpoint::READ_PATH)) }
-            AuthenticatedEndpoint::ClaimPosition => { endpoint.push_str(&format!("{}/position/claim", AuthenticatedEndpoint::WRITE_PATH)) }
-            AuthenticatedEndpoint::PositionsHistory => { endpoint.push_str(&format!("{}/positions/hist", AuthenticatedEndpoint::READ_PATH)) }
-            AuthenticatedEndpoint::PositionsSnapshot => { endpoint.push_str(&format!("{}/positions/snap", AuthenticatedEndpoint::READ_PATH)) }
-            AuthenticatedEndpoint::PositionsAudit => { endpoint.push_str(&format!("{}/positions/audit", AuthenticatedEndpoint::READ_PATH)) }
-            AuthenticatedEndpoint::DerivativePositionCollateral => { endpoint.push_str(&format!("{}/deriv/collateral/set", AuthenticatedEndpoint::READ_PATH)) }
-            AuthenticatedEndpoint::DerivativePositionCollateralLimits => { endpoint.push_str(&format!("{}/deriv/collateral/limits", AuthenticatedEndpoint::CALC_PATH)) }
-            AuthenticatedEndpoint::UserInfo => { endpoint.push_str(&format!("{}/info/user", AuthenticatedEndpoint::READ_PATH)) }
-            AuthenticatedEndpoint::Summary => { endpoint.push_str(&format!("{}/summary", AuthenticatedEndpoint::READ_PATH)) }
-            AuthenticatedEndpoint::FundingInfo { symbol } => { endpoint.push_str(&format!("{}/info/funding/{}", AuthenticatedEndpoint::READ_PATH, symbol)) }
+            AuthenticatedEndpoint::ClaimPosition => endpoint.push_str(&format!(
+                "{}/position/claim",
+                AuthenticatedEndpoint::WRITE_PATH
+            )),
+            AuthenticatedEndpoint::PositionsHistory => endpoint.push_str(&format!(
+                "{}/positions/hist",
+                AuthenticatedEndpoint::READ_PATH
+            )),
+            AuthenticatedEndpoint::PositionsSnapshot => endpoint.push_str(&format!(
+                "{}/positions/snap",
+                AuthenticatedEndpoint::READ_PATH
+            )),
+            AuthenticatedEndpoint::PositionsAudit => endpoint.push_str(&format!(
+                "{}/positions/audit",
+                AuthenticatedEndpoint::READ_PATH
+            )),
+            AuthenticatedEndpoint::DerivativePositionCollateral => endpoint.push_str(&format!(
+                "{}/deriv/collateral/set",
+                AuthenticatedEndpoint::READ_PATH
+            )),
+            AuthenticatedEndpoint::DerivativePositionCollateralLimits => {
+                endpoint.push_str(&format!(
+                    "{}/deriv/collateral/limits",
+                    AuthenticatedEndpoint::CALC_PATH
+                ))
+            }
+            AuthenticatedEndpoint::UserInfo => {
+                endpoint.push_str(&format!("{}/info/user", AuthenticatedEndpoint::READ_PATH))
+            }
+            AuthenticatedEndpoint::Summary => {
+                endpoint.push_str(&format!("{}/summary", AuthenticatedEndpoint::READ_PATH))
+            }
+            AuthenticatedEndpoint::FundingInfo { symbol } => endpoint.push_str(&format!(
+                "{}/info/funding/{}",
+                AuthenticatedEndpoint::READ_PATH,
+                symbol
+            )),
         }
 
         endpoint
@@ -130,9 +229,9 @@ pub enum MarginInfoKey {
 impl ToString for MarginInfoKey {
     fn to_string(&self) -> String {
         match self {
-            MarginInfoKey::Base => { "base".into() }
-            MarginInfoKey::Symbol(s) => { s.to_owned() }
-            MarginInfoKey::SymAll => { "sym_all".into() }
+            MarginInfoKey::Base => "base".into(),
+            MarginInfoKey::Symbol(s) => s.to_owned(),
+            MarginInfoKey::SymAll => "sym_all".into(),
         }
     }
 }

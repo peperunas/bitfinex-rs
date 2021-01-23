@@ -1,8 +1,8 @@
 use serde_json::from_str;
 
 use crate::client::Client;
-use crate::errors::BoxError;
 use crate::endpoints::{AuthenticatedEndpoint, MarginInfoKey};
+use crate::errors::BoxError;
 
 #[derive(Serialize, Deserialize)]
 pub struct Wallet {
@@ -85,26 +85,29 @@ impl Account {
         Ok(from_str(data.as_str())?)
     }
 
-    pub async fn margin_base(&self) -> Result<MarginBase, BoxError>
-    {
-        let endpoint = AuthenticatedEndpoint::MarginInfo{key: MarginInfoKey::Base};
+    pub async fn margin_base(&self) -> Result<MarginBase, BoxError> {
+        let endpoint = AuthenticatedEndpoint::MarginInfo {
+            key: MarginInfoKey::Base,
+        };
         let data = self.client.post_signed(&endpoint, "{}".into()).await?;
 
         Ok(from_str(data.as_str())?)
     }
 
-    pub async fn margin_symbol<S: ToString>(&self, key: S) -> Result<MarginSymbol, BoxError>
-    {
-        let endpoint = AuthenticatedEndpoint::MarginInfo {key: MarginInfoKey::Symbol(key.to_string())};
+    pub async fn margin_symbol<S: ToString>(&self, key: S) -> Result<MarginSymbol, BoxError> {
+        let endpoint = AuthenticatedEndpoint::MarginInfo {
+            key: MarginInfoKey::Symbol(key.to_string()),
+        };
         let data = self.client.post_signed(&endpoint, "{}".into()).await?;
 
         Ok(from_str(data.as_str())?)
     }
 
     pub async fn funding_info<S>(&self, key: S) -> Result<FundingInfo, BoxError>
-        where S: Into<String>
+    where
+        S: Into<String>,
     {
-        let endpoint = AuthenticatedEndpoint::FundingInfo {symbol: key.into()};
+        let endpoint = AuthenticatedEndpoint::FundingInfo { symbol: key.into() };
         let data = self.client.post_signed(&endpoint, "{}".into()).await?;
 
         Ok(from_str(data.as_str())?)

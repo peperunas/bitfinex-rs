@@ -1,9 +1,10 @@
+use std::collections::HashMap;
+
 use serde_json::from_str;
 
 use crate::client::Client;
-use crate::errors::BoxError;
-use std::collections::HashMap;
 use crate::endpoints::AuthenticatedEndpoint;
+use crate::errors::BoxError;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Position {
