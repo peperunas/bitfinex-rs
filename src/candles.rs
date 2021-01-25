@@ -124,10 +124,8 @@ pub struct Candles {
 
 // TODO: funding missing
 impl Candles {
-    pub fn new() -> Self {
-        Candles {
-            client: Client::new(None, None),
-        }
+    pub fn new(client: Client) -> Self {
+        Candles { client }
     }
 
     pub async fn last<S>(&self, symbol: S, timeframe: CandlesTimeFrame) -> Result<Candle, BoxError>

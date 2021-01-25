@@ -42,10 +42,8 @@ pub struct Trades {
 }
 
 impl Trades {
-    pub fn new() -> Self {
-        Trades {
-            client: Client::new(None, None),
-        }
+    pub fn new(client: Client) -> Self {
+        Trades { client }
     }
 
     pub async fn funding_currency<S>(&self, symbol: S) -> Result<Vec<FundingCurrency>, BoxError>

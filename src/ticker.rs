@@ -41,10 +41,8 @@ pub struct Ticker {
 }
 
 impl Ticker {
-    pub fn new() -> Self {
-        Ticker {
-            client: Client::new(None, None),
-        }
+    pub fn new(client: Client) -> Self {
+        Ticker { client }
     }
 
     pub async fn funding_currency<S>(&self, symbol: S) -> Result<FundingCurrency, BoxError>

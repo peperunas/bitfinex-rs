@@ -62,10 +62,8 @@ pub struct RawBook {
 }
 
 impl Book {
-    pub fn new() -> Self {
-        Book {
-            client: Client::new(None, None),
-        }
+    pub fn new(client: Client) -> Self {
+        Book { client }
     }
 
     pub async fn funding_currency<S>(

@@ -13,6 +13,7 @@ static NO_PARAMS: &'static [(); 0] = &[];
 pub struct Client {
     api_key: String,
     secret_key: String,
+    client: reqwest::Client,
 }
 
 impl Client {
@@ -20,11 +21,12 @@ impl Client {
         Client {
             api_key: api_key.unwrap_or("".into()),
             secret_key: secret_key.unwrap_or("".into()),
+            client: reqwest::Client::new(),
         }
     }
 
     pub async fn get(&self, endpoint: PublicEndpoint) -> Result<String, BoxError> {
-        let response = reqwest::get(&endpoint.to_string()).await?;
+        let response = self.client.get(&endpoint.to_string()).send().await?;
 
         self.handler(response).await
     }
@@ -43,13 +45,12 @@ impl Client {
         payload: String,
         params: &P,
     ) -> Result<String, BoxError> {
-        let client = reqwest::Client::new();
-
-        let response = client
+        let response = self
+            .client
             .post(&endpoint.to_string())
-            .headers(self.build_headers(&endpoint, payload.clone()).await?)
-            .body(payload)
+            .body(payload.clone())
             .query(params)
+            .headers(self.build_headers(&endpoint, payload).await?)
             .send()
             .await?;
 

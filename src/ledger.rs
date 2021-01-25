@@ -30,10 +30,8 @@ struct HistoryParams {
 }
 
 impl Ledger {
-    pub fn new(api_key: Option<String>, secret_key: Option<String>) -> Self {
-        Ledger {
-            client: Client::new(api_key, secret_key),
-        }
+    pub fn new(client: Client) -> Self {
+        Ledger { client }
     }
 
     pub async fn get_history<S>(

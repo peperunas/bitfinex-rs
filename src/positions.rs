@@ -93,10 +93,8 @@ pub struct Positions {
 }
 
 impl Positions {
-    pub fn new(api_key: Option<String>, secret_key: Option<String>) -> Self {
-        Positions {
-            client: Client::new(api_key, secret_key),
-        }
+    pub fn new(client: Client) -> Self {
+        Positions { client }
     }
 
     pub async fn active_positions(&self) -> Result<Vec<Position>, BoxError> {

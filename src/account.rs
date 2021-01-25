@@ -72,10 +72,8 @@ pub struct Account {
 }
 
 impl Account {
-    pub fn new(api_key: Option<String>, secret_key: Option<String>) -> Self {
-        Account {
-            client: Client::new(api_key, secret_key),
-        }
+    pub fn new(client: Client) -> Self {
+        Account { client }
     }
 
     pub async fn get_wallets(&self) -> Result<Vec<Wallet>, BoxError> {

@@ -1035,10 +1035,8 @@ pub struct Orders {
 }
 
 impl Orders {
-    pub fn new(api_key: Option<String>, secret_key: Option<String>) -> Self {
-        Orders {
-            client: Client::new(api_key, secret_key),
-        }
+    pub fn new(client: Client) -> Self {
+        Orders { client }
     }
 
     pub async fn active_orders(&self) -> Result<Vec<ActiveOrder>, BoxError> {

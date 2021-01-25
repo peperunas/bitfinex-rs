@@ -21,15 +21,17 @@ pub struct Bitfinex {
 
 impl Bitfinex {
     pub fn new(api_key: Option<String>, secret_key: Option<String>) -> Self {
+        let client = crate::client::Client::new(api_key.clone(), secret_key.clone());
+
         Bitfinex {
-            book: Book::new(),
-            ticker: Ticker::new(),
-            trades: Trades::new(),
-            candles: Candles::new(),
-            orders: Orders::new(api_key.clone(), secret_key.clone()),
-            account: Account::new(api_key.clone(), secret_key.clone()),
-            ledger: Ledger::new(api_key.clone(), secret_key.clone()),
-            positions: Positions::new(api_key.clone(), secret_key.clone()),
+            book: Book::new(client.clone()),
+            ticker: Ticker::new(client.clone()),
+            trades: Trades::new(client.clone()),
+            candles: Candles::new(client.clone()),
+            orders: Orders::new(client.clone()),
+            account: Account::new(client.clone()),
+            ledger: Ledger::new(client.clone()),
+            positions: Positions::new(client.clone()),
         }
     }
 }
