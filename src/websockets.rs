@@ -89,7 +89,7 @@ impl WebSockets {
     /// * `api_secret` - The API secret
     /// * `dms` - Whether the dead man switch is enabled. If true, all account orders will be
     ///           cancelled when the socket is closed.
-    pub fn auth<S>(
+    pub async fn auth<S>(
         &mut self,
         api_key: S,
         api_secret: S,
@@ -99,7 +99,7 @@ impl WebSockets {
     where
         S: AsRef<str>,
     {
-        let nonce = auth::generate_nonce()?;
+        let nonce = auth::generate_nonce().await?;
         let auth_payload = format!("AUTH{}", nonce);
         let signature =
             auth::sign_payload(api_secret.as_ref().as_bytes(), auth_payload.as_bytes())?;

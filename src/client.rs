@@ -47,7 +47,7 @@ impl Client {
 
         let response = client
             .post(&endpoint.to_string())
-            .headers(self.build_headers(&endpoint, payload.clone())?)
+            .headers(self.build_headers(&endpoint, payload.clone()).await?)
             .body(payload)
             .query(params)
             .send()
@@ -56,12 +56,12 @@ impl Client {
         self.handler(response).await
     }
 
-    fn build_headers(
+    async fn build_headers(
         &self,
         endpoint: &AuthenticatedEndpoint,
         payload: String,
     ) -> Result<HeaderMap, BoxError> {
-        let nonce: String = auth::generate_nonce()?;
+        let nonce: String = auth::generate_nonce().await?;
         let path = endpoint
             .to_string()
             .strip_prefix(AuthenticatedEndpoint::HOST)

@@ -4,6 +4,8 @@ use hex::encode;
 use ring::hmac;
 
 use crate::errors::BoxError;
+use bitflags::_core::time::Duration;
+use rand::Rng;
 
 pub fn sign_payload(secret: &[u8], payload: &[u8]) -> Result<String, BoxError> {
     let signed_key = hmac::Key::new(hmac::HMAC_SHA384, secret);
@@ -12,11 +14,12 @@ pub fn sign_payload(secret: &[u8], payload: &[u8]) -> Result<String, BoxError> {
     Ok(signature)
 }
 
-pub fn generate_nonce() -> Result<String, BoxError> {
-    let start = SystemTime::now();
-    let since_epoch = start.duration_since(UNIX_EPOCH)?;
+pub async fn generate_nonce() -> Result<String, BoxError> {
+    let random_sleep_duration: u8 = rand::thread_rng().gen();
+    tokio::time::delay_for(Duration::from_nanos(random_sleep_duration as u64)).await;
 
-    let timestamp = since_epoch.as_secs() * 1000000 + since_epoch.subsec_nanos() as u64 / 1_000_000;
+    let since_epoch = SystemTime::now().duration_since(UNIX_EPOCH)?;
+    let timestamp = since_epoch.as_micros();
 
-    Ok((timestamp + 1).to_string())
+    Ok((timestamp.to_string()))
 }
