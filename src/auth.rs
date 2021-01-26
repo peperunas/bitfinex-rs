@@ -16,11 +16,10 @@ pub fn sign_payload(secret: &[u8], payload: &[u8]) -> Result<String, BoxError> {
 
 pub async fn generate_nonce() -> Result<String, BoxError> {
     let random_sleep_duration: u16 = rand::thread_rng().gen();
-    tokio::time::delay_for(Duration::from_nanos(random_sleep_duration as u64)).await;
+    tokio::time::sleep(Duration::from_nanos(random_sleep_duration as u64)).await;
 
     let since_epoch = SystemTime::now().duration_since(UNIX_EPOCH)?;
     let timestamp = since_epoch.as_micros();
 
-    println!("Timestamp: {}", timestamp);
-    Ok((timestamp.to_string()))
+    Ok(timestamp.to_string())
 }
