@@ -1,7 +1,7 @@
 [package]
 name = "bitfinex"
-version = "0.4.3"
-license = "MIT OR Apache-2.0"
+version = "0.5"
+license = "Apache-2.0"
 authors = ["Flavio Oliveira <flavio@wisespace.io>", "Giulio De Pasquale <depasquale@giugl.io>"]
 
 description = "Rust Library for the Bitfinex API"
@@ -12,7 +12,7 @@ readme = "README.md"
 edition = "2018"
 
 [badges]
-travis-ci = { repository = "wisespace-io/bitfinex-rs" }
+travis-ci = { repository = "peperunas/bitfinex-rs" }
 
 [lib]
 name = "bitfinex"
