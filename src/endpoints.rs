@@ -110,6 +110,7 @@ pub enum AuthenticatedEndpoint {
     UserInfo,
     Summary,
     FundingInfo { symbol: String },
+    WalletTransfer,
 }
 
 impl AuthenticatedEndpoint {
@@ -214,6 +215,9 @@ impl ToString for AuthenticatedEndpoint {
                 AuthenticatedEndpoint::READ_PATH,
                 symbol
             )),
+            AuthenticatedEndpoint::WalletTransfer => {
+                endpoint.push_str(&format!("{}/transfer", AuthenticatedEndpoint::WRITE_PATH))
+            }
         }
 
         endpoint

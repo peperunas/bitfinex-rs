@@ -21,13 +21,13 @@ extern crate serde_json;
 extern crate tungstenite;
 extern crate url;
 
-mod account;
 mod auth;
 mod client;
 mod endpoints;
 mod ledger;
 mod trades;
 
+pub mod account;
 pub mod api;
 pub mod book;
 pub mod candles;
@@ -37,5 +37,6 @@ pub mod events;
 pub mod orders;
 pub mod pairs;
 pub mod positions;
+pub mod responses;
 pub mod ticker;
 pub mod websockets;

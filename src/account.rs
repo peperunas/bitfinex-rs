@@ -3,14 +3,25 @@ use serde_json::from_str;
 use crate::client::Client;
 use crate::endpoints::{AuthenticatedEndpoint, MarginInfoKey};
 use crate::errors::BoxError;
+use crate::responses::WalletTransferResponse;
 
 #[derive(Serialize, Deserialize)]
 pub struct Wallet {
-    pub wallet_type: String,
+    pub wallet_type: WalletKind,
     pub currency: String,
     pub balance: f64,
     pub unsettled_interest: f64,
     pub balance_available: Option<f64>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum WalletKind {
+    #[serde(rename = "exchange")]
+    Exchange,
+    #[serde(rename = "margin")]
+    Margin,
+    #[serde(rename = "funding")]
+    Funding,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -83,13 +94,32 @@ impl Account {
         Ok(from_str(data.as_str())?)
     }
 
+    pub async fn transfer_between_wallets(
+        &self,
+        from: &WalletKind,
+        to: &WalletKind,
+        currency: String,
+        amount: f64,
+    ) -> Result<WalletTransferResponse, BoxError> {
+        let endpoint = AuthenticatedEndpoint::WalletTransfer;
+        let payload =
+            json!({"from": from, "to": to, "currency": currency, "amount": amount.to_string()});
+
+        let response = self
+            .client
+            .post_signed(&endpoint, payload.to_string())
+            .await?;
+
+        Ok(from_str(&response)?)
+    }
+
     pub async fn margin_base(&self) -> Result<MarginBase, BoxError> {
         let endpoint = AuthenticatedEndpoint::MarginInfo {
             key: MarginInfoKey::Base,
         };
         let data = self.client.post_signed(&endpoint, "{}".into()).await?;
 
-        Ok(from_str(data.as_str())?)
+        Ok(from_str(&data)?)
     }
 
     pub async fn margin_symbol<S: ToString>(&self, key: S) -> Result<MarginSymbol, BoxError> {
