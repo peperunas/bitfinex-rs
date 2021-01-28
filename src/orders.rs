@@ -200,14 +200,22 @@ impl<'de> Deserialize<'de> for ActiveOrder {
             .next()
             .ok_or(D::Error::custom("Missing placeholder"))?;
 
-        let flags = OrderFlags::from_bits(
-            iterator
+        // sometimes the server returns a number, other times a string
+        let flags = {
+            let flags_value = iterator
                 .next()
-                .ok_or(D::Error::custom("Missing order flags"))?
-                .as_u64()
-                .ok_or(D::Error::custom("Invalid order flags type"))? as u32,
-        )
-        .ok_or(D::Error::custom("Invalid order flags"))?;
+                .ok_or(D::Error::custom("Missing order flags"))?;
+
+            if let Some(value) = flags_value.as_u64() {
+                OrderFlags::from_bits(value as u32)
+                    .ok_or(D::Error::custom("Invalid u64 flags value"))?
+            } else if let Some(string) = flags_value.as_str() {
+                OrderFlags::from_bits(string.parse().map_err(D::Error::custom)?)
+                    .ok_or(D::Error::custom("Invalid string flags value"))?
+            } else {
+                return Err(D::Error::custom("Invalid flags value type"));
+            }
+        };
 
         let order_status = String::deserialize(
             iterator
@@ -605,6 +613,8 @@ impl Orders {
             },
             None => AuthenticatedEndpoint::OrdersHistory { symbol: None },
         };
+
+        println!("Endpoint: {:?}", endpoint);
         let data = self.client.post_signed(&endpoint, "{}".into()).await?;
 
         Ok(from_str(&data)?)
