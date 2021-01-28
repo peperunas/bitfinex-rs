@@ -4,7 +4,7 @@ use crate::client::Client;
 use crate::endpoints::PublicEndpoint;
 use crate::errors::BoxError;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum BookPrecision {
     #[serde(rename = "P0")]
     P0,
