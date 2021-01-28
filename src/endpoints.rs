@@ -2,6 +2,7 @@ use crate::book::BookPrecision;
 use crate::candles::{CandlesSection, CandlesTimeFrame};
 
 // TODO: incomplete
+#[derive(Debug)]
 pub enum PublicEndpoint {
     Status,
     Tickers {
@@ -89,6 +90,7 @@ impl ToString for PublicEndpoint {
 }
 
 // TODO: incomplete
+#[derive(Debug)]
 pub enum AuthenticatedEndpoint {
     Wallets,
     RetrieveOrders,
@@ -146,10 +148,14 @@ impl ToString for AuthenticatedEndpoint {
             AuthenticatedEndpoint::OrdersHistory { symbol } => endpoint.push_str(
                 match symbol {
                     Some(symbol) => {
-                        format!("{}/order/{}/hist", AuthenticatedEndpoint::READ_PATH, symbol)
+                        format!(
+                            "{}/orders/{}/hist",
+                            AuthenticatedEndpoint::READ_PATH,
+                            symbol
+                        )
                     }
                     None => {
-                        format!("{}/order/hist", AuthenticatedEndpoint::READ_PATH)
+                        format!("{}/orders/hist", AuthenticatedEndpoint::READ_PATH)
                     }
                 }
                 .as_str(),
@@ -224,6 +230,7 @@ impl ToString for AuthenticatedEndpoint {
     }
 }
 
+#[derive(Debug)]
 pub enum MarginInfoKey {
     Base,
     Symbol(String),
