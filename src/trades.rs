@@ -3,21 +3,7 @@ use serde_json::from_str;
 use crate::client::Client;
 use crate::endpoints::{AuthenticatedEndpoint, PublicEndpoint};
 use crate::errors::BoxError;
-
-#[derive(Serialize, Deserialize)]
-pub struct Trade {
-    pub id: i64,
-    pub pair: String,
-    pub execution_timestap: i64,
-    pub order_id: i32,
-    pub execution_amount: f64,
-    pub execution_price: f64,
-    pub order_type: String,
-    pub order_price: f64,
-    pub maker: i32,
-    pub fee: f64,
-    pub fee_currency: String,
-}
+use crate::responses::TradeResponse;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct TradingPair {
@@ -70,7 +56,7 @@ impl Trades {
         Ok(from_str(data.as_str())?)
     }
 
-    pub async fn history<S: ToString>(&self, symbol: S) -> Result<Vec<Trade>, BoxError> {
+    pub async fn history<S: ToString>(&self, symbol: S) -> Result<Vec<TradeResponse>, BoxError> {
         let endpoint = AuthenticatedEndpoint::OrdersHistory {
             symbol: Some(symbol.to_string()),
         };
@@ -83,7 +69,7 @@ impl Trades {
         &self,
         symbol: S,
         order_id: u64,
-    ) -> Result<Vec<Trade>, BoxError> {
+    ) -> Result<Vec<TradeResponse>, BoxError> {
         let endpoint = AuthenticatedEndpoint::OrderTrades {
             symbol: symbol.to_string(),
             order_id,

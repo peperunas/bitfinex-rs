@@ -616,3 +616,116 @@ pub enum OrderResponseKind {
     #[serde(rename = "foc-req")]
     FundingCancelOrderRequest,
 }
+
+#[derive(Serialize, Debug)]
+pub struct TradeResponse {
+    pub trade_id: u64,
+    pub symbol: String,
+    pub execution_timestamp: u64,
+    pub order_id: u64,
+    pub execution_amount: f64,
+    pub execution_price: f64,
+    pub order_type: Option<OrderKind>,
+    pub order_price: Option<f64>,
+    pub is_maker: bool,
+    pub fee: f64,
+    pub fee_currency: String,
+}
+
+impl<'de> Deserialize<'de> for TradeResponse {
+    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = Value::deserialize(deserializer)?
+            .as_array()
+            .ok_or(D::Error::custom("Invalid trade array"))?
+            .to_owned();
+        let mut iterator = value.iter();
+
+        let trade_id = iterator
+            .next()
+            .ok_or(D::Error::custom("Missing trade id"))?
+            .as_u64()
+            .ok_or(D::Error::custom("Invalid trade id"))?;
+
+        let symbol = iterator
+            .next()
+            .ok_or(D::Error::custom("Missing symbol"))?
+            .as_str()
+            .ok_or(D::Error::custom("Invalid symbol"))?
+            .into();
+
+        let execution_timestamp = iterator
+            .next()
+            .ok_or(D::Error::custom("Missing execution timestamp"))?
+            .as_u64()
+            .ok_or(D::Error::custom("Invalid execution timestamp"))?;
+
+        let order_id = iterator
+            .next()
+            .ok_or(D::Error::custom("Missing order id"))?
+            .as_u64()
+            .ok_or(D::Error::custom("Invalid order id"))?;
+
+        let execution_amount = iterator
+            .next()
+            .ok_or(D::Error::custom("Missing execution amount"))?
+            .as_f64()
+            .ok_or(D::Error::custom("Invalid execution amount"))?;
+
+        let execution_price = iterator
+            .next()
+            .ok_or(D::Error::custom("Missing execution price"))?
+            .as_f64()
+            .ok_or(D::Error::custom("Invalid execution price"))?;
+
+        let order_type = Option::deserialize(
+            iterator
+                .next()
+                .ok_or(D::Error::custom("Missing order type"))?,
+        )
+        .map_err(D::Error::custom)?;
+
+        let order_price = Option::deserialize(
+            iterator
+                .next()
+                .ok_or(D::Error::custom("Missing order price"))?,
+        )
+        .map_err(D::Error::custom)?;
+
+        let is_maker = iterator
+            .next()
+            .ok_or(D::Error::custom("Missing maker fee"))?
+            .as_i64()
+            .ok_or(D::Error::custom("Invalid hidden fee"))?
+            > 0;
+
+        let fee = iterator
+            .next()
+            .ok_or(D::Error::custom("Missing fee"))?
+            .as_f64()
+            .ok_or(D::Error::custom("Invalid fee amount"))?;
+
+        let fee_currency = iterator
+            .next()
+            .ok_or(D::Error::custom("Missing fee currency"))?
+            .as_str()
+            .ok_or(D::Error::custom("Invalid fee currency"))?
+            .into();
+
+        Ok(Self {
+            trade_id,
+            symbol,
+            execution_timestamp,
+            order_id,
+            execution_amount,
+            execution_price,
+            order_type,
+            order_price,
+            is_maker,
+            fee,
+            fee_currency,
+        })
+    }
+}
