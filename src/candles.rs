@@ -4,7 +4,7 @@ use crate::client::Client;
 use crate::endpoints::PublicEndpoint;
 use crate::errors::BoxError;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum CandlesTimeFrame {
     #[serde(rename = "1m")]
     OneMinute,
@@ -48,7 +48,7 @@ impl ToString for CandlesTimeFrame {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum CandlesSection {
     #[serde(rename = "last")]
     Last,
