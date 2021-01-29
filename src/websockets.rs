@@ -115,7 +115,7 @@ impl WebSockets {
         });
 
         if let Err(error_msg) = self.sender.send(&msg.to_string()) {
-            self.error_hander(error_msg);
+            self.error_handler(error_msg);
         }
 
         Ok(())
@@ -129,7 +129,7 @@ impl WebSockets {
         let msg = json!({"event": "subscribe", "channel": "ticker", "symbol": local_symbol });
 
         if let Err(error_msg) = self.sender.send(&msg.to_string()) {
-            self.error_hander(error_msg);
+            self.error_handler(error_msg);
         }
     }
 
@@ -141,7 +141,7 @@ impl WebSockets {
         let msg = json!({"event": "subscribe", "channel": "trades", "symbol": local_symbol });
 
         if let Err(error_msg) = self.sender.send(&msg.to_string()) {
-            self.error_hander(error_msg);
+            self.error_handler(error_msg);
         }
     }
 
@@ -153,7 +153,7 @@ impl WebSockets {
         let msg = json!({"event": "subscribe", "channel": "candles", "key": key });
 
         if let Err(error_msg) = self.sender.send(&msg.to_string()) {
-            self.error_hander(error_msg);
+            self.error_handler(error_msg);
         }
     }
 
@@ -174,7 +174,7 @@ impl WebSockets {
         });
 
         if let Err(error_msg) = self.sender.send(&msg.to_string()) {
-            self.error_hander(error_msg);
+            self.error_handler(error_msg);
         }
     }
 
@@ -191,11 +191,11 @@ impl WebSockets {
         });
 
         if let Err(error_msg) = self.sender.send(&msg.to_string()) {
-            self.error_hander(error_msg);
+            self.error_handler(error_msg);
         }
     }
 
-    fn error_hander(&mut self, error_msg: BoxError) {
+    fn error_handler(&mut self, error_msg: BoxError) {
         if let Some(ref mut h) = self.event_handler {
             h.on_error(error_msg);
         }
