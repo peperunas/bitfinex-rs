@@ -3,7 +3,7 @@ use serde_json::from_str;
 use crate::client::Client;
 use crate::endpoints::{AuthenticatedEndpoint, MarginInfoKey};
 use crate::errors::BoxError;
-use crate::responses::WalletTransferResponse;
+use crate::responses::{AccountFees, WalletTransferResponse};
 
 #[derive(Serialize, Deserialize)]
 pub struct Wallet {
@@ -139,5 +139,12 @@ impl Account {
         let data = self.client.post_signed(&endpoint, "{}".into()).await?;
 
         Ok(from_str(data.as_str())?)
+    }
+
+    pub async fn account_summary(&self) -> Result<AccountFees, BoxError> {
+        let endpoint = AuthenticatedEndpoint::Summary;
+        let data = self.client.post_signed(&endpoint, "{}".into()).await?;
+
+        Ok(from_str(&data)?)
     }
 }

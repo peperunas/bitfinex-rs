@@ -45,6 +45,42 @@ pub struct WalletTransferResponse {
     text: String,
 }
 
+impl WalletTransferResponse {
+    pub fn mts(&self) -> u64 {
+        self.mts
+    }
+    pub fn response_type(&self) -> &WalletTransferResponseKind {
+        &self.response_type
+    }
+    pub fn id(&self) -> Option<u64> {
+        self.id
+    }
+    pub fn mts_update(&self) -> u64 {
+        self.mts_update
+    }
+    pub fn from(&self) -> &WalletKind {
+        &self.from
+    }
+    pub fn to(&self) -> &WalletKind {
+        &self.to
+    }
+    pub fn symbol_from(&self) -> &str {
+        &self.symbol_from
+    }
+    pub fn symbol_to(&self) -> &Option<String> {
+        &self.symbol_to
+    }
+    pub fn amount(&self) -> f64 {
+        self.amount
+    }
+    pub fn status(&self) -> &ResponseStatus {
+        &self.status
+    }
+    pub fn text(&self) -> &str {
+        &self.text
+    }
+}
+
 impl<'de> Deserialize<'de> for WalletTransferResponse {
     fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
     where
@@ -619,17 +655,53 @@ pub enum OrderResponseKind {
 
 #[derive(Serialize, Debug)]
 pub struct TradeResponse {
-    pub trade_id: u64,
-    pub symbol: String,
-    pub execution_timestamp: u64,
-    pub order_id: u64,
-    pub execution_amount: f64,
-    pub execution_price: f64,
-    pub order_type: Option<OrderKind>,
-    pub order_price: Option<f64>,
-    pub is_maker: bool,
-    pub fee: f64,
-    pub fee_currency: String,
+    trade_id: u64,
+    symbol: String,
+    execution_timestamp: u64,
+    order_id: u64,
+    execution_amount: f64,
+    execution_price: f64,
+    order_type: Option<OrderKind>,
+    order_price: Option<f64>,
+    is_maker: bool,
+    fee: f64,
+    fee_currency: String,
+}
+
+impl TradeResponse {
+    pub fn trade_id(&self) -> u64 {
+        self.trade_id
+    }
+    pub fn symbol(&self) -> &str {
+        &self.symbol
+    }
+    pub fn execution_timestamp(&self) -> u64 {
+        self.execution_timestamp
+    }
+    pub fn order_id(&self) -> u64 {
+        self.order_id
+    }
+    pub fn execution_amount(&self) -> f64 {
+        self.execution_amount
+    }
+    pub fn execution_price(&self) -> f64 {
+        self.execution_price
+    }
+    pub fn order_type(&self) -> Option<OrderKind> {
+        self.order_type
+    }
+    pub fn order_price(&self) -> Option<f64> {
+        self.order_price
+    }
+    pub fn is_maker(&self) -> bool {
+        self.is_maker
+    }
+    pub fn fee(&self) -> f64 {
+        self.fee
+    }
+    pub fn fee_currency(&self) -> &str {
+        &self.fee_currency
+    }
 }
 
 impl<'de> Deserialize<'de> for TradeResponse {
@@ -726,6 +798,117 @@ impl<'de> Deserialize<'de> for TradeResponse {
             is_maker,
             fee,
             fee_currency,
+        })
+    }
+}
+
+pub struct AccountFees {
+    // Shows the maker fee rate for the account
+    maker_fee: f64,
+    // Shows the maker rebate for derivative trades on the account
+    derivative_rebate: f64,
+    // Shows the taker fee rate for crypto to crypto trades on the account
+    taker_to_crypto: f64,
+    // Shows the taker fee rate for crypto to stable coin trades on the account
+    taker_to_stable: f64,
+    // Shows the taker fee rate for crypto to stable coin trades on the account
+    taker_to_fiat: f64,
+    // Shows the taker fee rate for derivative trades on the account
+    derivative_taker: f64,
+}
+
+impl AccountFees {
+    pub fn maker_fee(&self) -> f64 {
+        self.maker_fee
+    }
+    pub fn derivative_rebate(&self) -> f64 {
+        self.derivative_rebate
+    }
+    pub fn taker_to_crypto(&self) -> f64 {
+        self.taker_to_crypto
+    }
+    pub fn taker_to_stable(&self) -> f64 {
+        self.taker_to_stable
+    }
+    pub fn taker_to_fiat(&self) -> f64 {
+        self.taker_to_fiat
+    }
+    pub fn derivative_taker(&self) -> f64 {
+        self.derivative_taker
+    }
+}
+
+impl<'de> Deserialize<'de> for AccountFees {
+    fn deserialize<D>(deserializer: D) -> Result<Self, <D as Deserializer<'de>>::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = Value::deserialize(deserializer)?
+            .as_array()
+            .ok_or(D::Error::custom("Invalid response"))?
+            .to_owned();
+
+        let taker_maker_arrays = value
+            .get(4)
+            .ok_or(D::Error::custom("Missing inner arrays."))?
+            .as_array()
+            .ok_or(D::Error::custom("Invalid inner arrays"))?;
+
+        let maker_array = taker_maker_arrays
+            .get(0)
+            .ok_or(D::Error::custom("Missing maker fees array."))?
+            .as_array()
+            .ok_or(D::Error::custom("Invalid maker fees array"))?;
+
+        let taker_array = taker_maker_arrays
+            .get(1)
+            .ok_or(D::Error::custom("Missing taker fees array."))?
+            .as_array()
+            .ok_or(D::Error::custom("Invalid taker fees array"))?;
+
+        let maker_fee = maker_array
+            .get(0)
+            .ok_or(D::Error::custom("Missing maker fee."))?
+            .as_f64()
+            .ok_or(D::Error::custom("Invalid maker fee value."))?;
+
+        let derivative_rebate = maker_array
+            .get(5)
+            .ok_or(D::Error::custom("Missing derivative rebate."))?
+            .as_f64()
+            .ok_or(D::Error::custom("Invalid derivative rebate value."))?;
+
+        let taker_to_crypto = taker_array
+            .get(0)
+            .ok_or(D::Error::custom("Missing maker fee."))?
+            .as_f64()
+            .ok_or(D::Error::custom("Invalid maker fee value."))?;
+
+        let taker_to_stable = taker_array
+            .get(1)
+            .ok_or(D::Error::custom("Missing derivative rebate."))?
+            .as_f64()
+            .ok_or(D::Error::custom("Invalid derivative rebate value."))?;
+
+        let taker_to_fiat = taker_array
+            .get(2)
+            .ok_or(D::Error::custom("Missing derivative rebate."))?
+            .as_f64()
+            .ok_or(D::Error::custom("Invalid derivative rebate value."))?;
+
+        let derivative_taker = taker_array
+            .get(5)
+            .ok_or(D::Error::custom("Missing derivative rebate."))?
+            .as_f64()
+            .ok_or(D::Error::custom("Invalid derivative rebate value."))?;
+
+        Ok(Self {
+            maker_fee,
+            derivative_rebate,
+            taker_to_crypto,
+            taker_to_stable,
+            taker_to_fiat,
+            derivative_taker,
         })
     }
 }
