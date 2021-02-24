@@ -66,9 +66,7 @@ impl WebSockets {
                 self.socket = Some(answer);
                 Ok(())
             }
-            Err(e) => {
-                bail!(format!("Error during handshake {}", e))
-            }
+            Err(e) => Err(format!("Error during handshake {}", e).into()),
         }
     }
 
@@ -99,10 +97,9 @@ impl WebSockets {
     where
         S: AsRef<str>,
     {
-        let nonce = auth::generate_nonce().await?;
+        let nonce = auth::generate_nonce().await;
         let auth_payload = format!("AUTH{}", nonce);
-        let signature =
-            auth::sign_payload(api_secret.as_ref().as_bytes(), auth_payload.as_bytes())?;
+        let signature = auth::sign_payload(api_secret.as_ref().as_bytes(), auth_payload.as_bytes());
 
         let msg = json!({
             "event": "auth",
@@ -224,7 +221,7 @@ impl WebSockets {
                             }
                         },
                         Err(mpsc::TryRecvError::Disconnected) => {
-                            bail!("Disconnected")
+                            return Err("Disconnected".into());
                         }
                         Err(mpsc::TryRecvError::Empty) => break,
                     }
@@ -257,7 +254,7 @@ impl WebSockets {
                     Message::Binary(_) => {}
                     Message::Ping(_) | Message::Pong(_) => {}
                     Message::Close(e) => {
-                        bail!(format!("Disconnected {:?}", e));
+                        return Err(format!("Disconnected {:?}", e).into());
                     }
                 }
             }

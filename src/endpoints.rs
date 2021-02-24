@@ -120,6 +120,14 @@ impl AuthenticatedEndpoint {
     const READ_PATH: &'static str = "/v2/auth/r";
     const WRITE_PATH: &'static str = "/v2/auth/w";
     const CALC_PATH: &'static str = "/v2/auth/calc";
+
+    pub fn path(&self) -> String {
+        // unwrapping since HOST is always present in an AuthenticatedEndpoint
+        self.to_string()
+            .strip_prefix(AuthenticatedEndpoint::HOST)
+            .unwrap()
+            .to_owned()
+    }
 }
 
 impl ToString for AuthenticatedEndpoint {
