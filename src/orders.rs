@@ -467,53 +467,53 @@ impl OrderForm {
         }
     }
 
-    pub fn with_gid(mut self, gid: u32) -> Self {
-        self.gid = Some(gid);
+    pub fn with_gid(mut self, gid: Option<u32>) -> Self {
+        self.gid = gid;
         self
     }
 
-    pub fn with_cid(mut self, cid: u32) -> Self {
-        self.cid = Some(cid);
+    pub fn with_cid(mut self, cid: Option<u32>) -> Self {
+        self.cid = cid;
         self
     }
 
-    pub fn with_flags(mut self, flags: OrderFlags) -> Self {
-        self.flags = Some(flags.bits());
+    pub fn with_flags(mut self, flags: Option<OrderFlags>) -> Self {
+        self.flags = flags.map(|x| x.bits());
         self
     }
 
-    pub fn with_leverage(mut self, leverage: u32) -> Self {
-        self.leverage = Some(leverage);
+    pub fn with_leverage(mut self, leverage: Option<u32>) -> Self {
+        self.leverage = leverage;
         self
     }
 
-    pub fn with_price_trailing(mut self, trailing: f64) -> Result<Self, BoxError> {
+    pub fn with_price_trailing(mut self, trailing: Option<f64>) -> Result<Self, BoxError> {
         match self.order_type {
             OrderKind::TrailingStop => {
-                self.price_trailing = Some(trailing.to_string());
+                self.price_trailing = trailing.map(|x| x.to_string());
                 Ok(self)
             }
             _ => Err("Invalid order type.".into()),
         }
     }
 
-    pub fn with_price_aux_limit(mut self, limit: f64) -> Result<Self, BoxError> {
+    pub fn with_price_aux_limit(mut self, limit: Option<f64>) -> Result<Self, BoxError> {
         match self.order_type {
             OrderKind::StopLimit | OrderKind::ExchangeStopLimit => {
-                self.price_aux_limit = Some(limit.to_string());
+                self.price_aux_limit = limit.map(|x| x.to_string());
                 Ok(self)
             }
             _ => Err("Invalid order type.".into()),
         }
     }
 
-    pub fn with_price_oco_stop(mut self, oco_stop: f64) -> Result<Self, BoxError> {
+    pub fn with_price_oco_stop(mut self, oco_stop: Option<f64>) -> Result<Self, BoxError> {
         match self.flags {
             None => Err("No flags set.".into()),
             Some(flags) => match OrderFlags::from_bits(flags) {
                 Some(flags) => {
                     if flags.contains(OrderFlags::OCO) {
-                        self.price_oco_stop = Some(oco_stop.to_string());
+                        self.price_oco_stop = oco_stop.map(|x| x.to_string());
                         return Ok(self);
                     }
                     return Err("OCO flag not set.".into());
@@ -523,16 +523,16 @@ impl OrderForm {
         }
     }
 
-    pub fn with_tif<T: TimeZone>(mut self, tif: DateTime<T>) -> Self
+    pub fn with_tif<T: TimeZone>(mut self, tif: Option<DateTime<T>>) -> Self
     where
         T::Offset: Display,
     {
-        self.tif = Some(tif.format("%Y-%m-%d %H:%M:%S").to_string());
+        self.tif = tif.map(|x| x.format("%Y-%m-%d %H:%M:%S").to_string());
         self
     }
 
-    pub fn with_meta(mut self, meta: OrderMeta) -> Self {
-        self.meta = Some(meta);
+    pub fn with_meta(mut self, meta: Option<OrderMeta>) -> Self {
+        self.meta = meta;
         self
     }
 }
